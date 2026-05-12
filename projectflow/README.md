@@ -306,3 +306,31 @@ Example test command:
 
 ```bash
 curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
+
+## Export Data to JSON
+
+This endpoint exports the current database data to a JSON file.
+
+The export includes:
+
+- Master records from the `projects` table
+- Detail records from the `tasks` table
+- Relationship data showing each project with its related tasks
+
+### Endpoint
+
+```bash
+GET /api/export/json
+```
+
+### Test with curl
+
+```bash
+curl http://127.0.0.1:5000/api/export/json | python3 -m json.tool
+```
+
+### Export file location
+
+```text
+database/exports/projectflow_export.json
+```

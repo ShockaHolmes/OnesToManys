@@ -2,6 +2,7 @@ import os
 import socket
 import sys
 import sqlite3
+import json
 from pathlib import Path
 
 
@@ -26,6 +27,7 @@ CORS(app)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "database" / "projectflow.db"
+EXPORT_DIR = BASE_DIR / "database" / "exports"
 
 
 def get_db_connection():
@@ -59,6 +61,7 @@ def home():
             "GET /api/projects/<project_id>/tasks",
             "GET /api/projects/<project_id>/tasks/<task_id>",
             "POST /api/projects/<project_id>/tasks"
+            "GET /api/export/json",
         ]
     })
 
@@ -617,6 +620,66 @@ def create_task_for_project(project_id):
         "project_id": project_id,
         "task": dict(new_task)
     }), 201
+
+# ---------------------------------------------------------
+# DATA EXPORT ROUTES
+# ---------------------------------------------------------
+
+@app.route("/api/export/json", methods=["GET"])
+def export_data_to_json():
+    conn = get_db_connection()
+
+    projects = conn.execute(
+        "SELECT * FROM projects ORDER BY project_id"
+    ).fetchall()
+
+    tasks = conn.execute(
+        "SELECT * FROM tasks ORDER BY task_id"
+    ).fetchall()
+
+    projects_with_tasks = []
+
+    for project in projects:
+        project_dict = dict(project)
+
+        project_tasks = conn.execute(
+            """
+            SELECT * FROM tasks
+            WHERE project_id = ?
+            ORDER BY task_id
+            """,
+            (project["project_id"],)
+        ).fetchall()
+
+        project_dict["tasks"] = [dict(task) for task in project_tasks]
+        projects_with_tasks.append(project_dict)
+
+    conn.close()
+
+    export_data = {
+        "app_name": "ProjectFlow",
+        "relationship": "Project -> Tasks",
+        "master_table": "projects",
+        "detail_table": "tasks",
+        "projects": [dict(project) for project in projects],
+        "tasks": [dict(task) for task in tasks],
+        "projects_with_tasks": projects_with_tasks
+    }
+
+    EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+    export_file = EXPORT_DIR / "projectflow_export.json"
+
+    with open(export_file, "w", encoding="utf-8") as file:
+        json.dump(export_data, file, indent=4)
+
+    return jsonify({
+        "message": "Data exported successfully",
+        "file_path": str(export_file),
+        "project_count": len(export_data["projects"]),
+        "task_count": len(export_data["tasks"]),
+        "relationship_count": len(export_data["projects_with_tasks"])
+    })
 
 
 if __name__ == "__main__":

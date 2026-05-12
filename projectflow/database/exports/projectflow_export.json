@@ -1,0 +1,137 @@
+{
+    "app_name": "ProjectFlow",
+    "relationship": "Project -> Tasks",
+    "master_table": "projects",
+    "detail_table": "tasks",
+    "projects": [
+        {
+            "project_id": 1,
+            "project_name": "Foster Path Dashboard",
+            "description": "A data dashboard project that helps identify support needs for youth aging out of the foster care system and connects them with helpful resources.",
+            "status": "In Progress",
+            "start_date": "2026-05-12",
+            "due_date": "2026-06-12"
+        },
+        {
+            "project_id": 3,
+            "project_name": "Portfolio Website",
+            "description": "Create a personal portfolio website.",
+            "status": "Not Started",
+            "start_date": "2026-05-15",
+            "due_date": "2026-06-01"
+        }
+    ],
+    "tasks": [
+        {
+            "task_id": 1,
+            "project_id": 1,
+            "task_title": "Create youth data",
+            "task_description": "Create sample youth records that include age, housing status, education status, employment status, and support needs.",
+            "priority": "High",
+            "status": "Not Started",
+            "due_date": "2026-05-16"
+        },
+        {
+            "task_id": 2,
+            "project_id": 1,
+            "task_title": "Build database schema",
+            "task_description": "Design and create the database structure needed to store project data, youth data, service resources, and dashboard information.",
+            "priority": "High",
+            "status": "In Progress",
+            "due_date": "2026-05-20"
+        },
+        {
+            "task_id": 3,
+            "project_id": 1,
+            "task_title": "Create dashboard charts",
+            "task_description": "Build visual charts that show risk levels, service needs, task progress, and resource recommendations.",
+            "priority": "Medium",
+            "status": "Not Started",
+            "due_date": "2026-05-28"
+        },
+        {
+            "task_id": 7,
+            "project_id": 1,
+            "task_title": "Create risk score system",
+            "task_description": "Build a simple risk score system for youth support needs.",
+            "priority": "High",
+            "status": "Not Started",
+            "due_date": "2026-06-01"
+        },
+        {
+            "task_id": 8,
+            "project_id": 1,
+            "task_title": "Create resource recommendation logic",
+            "task_description": "Build logic that recommends housing, education, employment, and mentoring resources for youth records.",
+            "priority": "High",
+            "status": "Not Started",
+            "due_date": "2026-06-08"
+        }
+    ],
+    "projects_with_tasks": [
+        {
+            "project_id": 1,
+            "project_name": "Foster Path Dashboard",
+            "description": "A data dashboard project that helps identify support needs for youth aging out of the foster care system and connects them with helpful resources.",
+            "status": "In Progress",
+            "start_date": "2026-05-12",
+            "due_date": "2026-06-12",
+            "tasks": [
+                {
+                    "task_id": 1,
+                    "project_id": 1,
+                    "task_title": "Create youth data",
+                    "task_description": "Create sample youth records that include age, housing status, education status, employment status, and support needs.",
+                    "priority": "High",
+                    "status": "Not Started",
+                    "due_date": "2026-05-16"
+                },
+                {
+                    "task_id": 2,
+                    "project_id": 1,
+                    "task_title": "Build database schema",
+                    "task_description": "Design and create the database structure needed to store project data, youth data, service resources, and dashboard information.",
+                    "priority": "High",
+                    "status": "In Progress",
+                    "due_date": "2026-05-20"
+                },
+                {
+                    "task_id": 3,
+                    "project_id": 1,
+                    "task_title": "Create dashboard charts",
+                    "task_description": "Build visual charts that show risk levels, service needs, task progress, and resource recommendations.",
+                    "priority": "Medium",
+                    "status": "Not Started",
+                    "due_date": "2026-05-28"
+                },
+                {
+                    "task_id": 7,
+                    "project_id": 1,
+                    "task_title": "Create risk score system",
+                    "task_description": "Build a simple risk score system for youth support needs.",
+                    "priority": "High",
+                    "status": "Not Started",
+                    "due_date": "2026-06-01"
+                },
+                {
+                    "task_id": 8,
+                    "project_id": 1,
+                    "task_title": "Create resource recommendation logic",
+                    "task_description": "Build logic that recommends housing, education, employment, and mentoring resources for youth records.",
+                    "priority": "High",
+                    "status": "Not Started",
+                    "due_date": "2026-06-08"
+                }
+            ]
+        },
+        {
+            "project_id": 3,
+            "project_name": "Portfolio Website",
+            "description": "Create a personal portfolio website.",
+            "status": "Not Started",
+            "start_date": "2026-05-15",
+            "due_date": "2026-06-01",
+            "tasks": []
+        }
+    ]
+}
