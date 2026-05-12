@@ -57,6 +57,7 @@ def home():
             "DELETE /api/tasks/<task_id>",
 
             "GET /api/projects/<project_id>/tasks",
+            "GET /api/projects/<project_id>/tasks/<task_id>",
             "POST /api/projects/<project_id>/tasks"
         ]
     })
@@ -507,6 +508,44 @@ def get_tasks_by_project(project_id):
         "tasks": [dict(task) for task in tasks]
     })
 
+@app.route("/api/projects/<int:project_id>/tasks/<int:task_id>", methods=["GET"])
+def get_one_task_for_project(project_id, task_id):
+    conn = get_db_connection()
+
+    project = conn.execute(
+        "SELECT * FROM projects WHERE project_id = ?",
+        (project_id,)
+    ).fetchone()
+
+    if project is None:
+        conn.close()
+        return jsonify({
+            "error": "Project not found",
+            "project_id": project_id
+        }), 404
+
+    task = conn.execute(
+        """
+        SELECT * FROM tasks
+        WHERE project_id = ?
+        AND task_id = ?
+        """,
+        (project_id, task_id)
+    ).fetchone()
+
+    conn.close()
+
+    if task is None:
+        return jsonify({
+            "error": "Task not found for this project",
+            "project_id": project_id,
+            "task_id": task_id
+        }), 404
+
+    return jsonify({
+        "project": dict(project),
+        "task": dict(task)
+    })
 
 @app.route("/api/projects/<int:project_id>/tasks", methods=["POST"])
 def create_task_for_project(project_id):

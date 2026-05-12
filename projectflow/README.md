@@ -249,3 +249,24 @@ curl -X POST http://127.0.0.1:5000/api/projects/1/tasks \
     "due_date": "2026-06-15"
   }' | python3 -m json.tool
 ```
+## Get One Task Under One Project
+
+This endpoint returns one specific detail record only if it belongs to the selected master record.
+
+### Get Task 1 under Project 1
+
+```bash
+curl http://127.0.0.1:5000/api/projects/1/tasks/1 | python3 -m json.tool
+```
+
+### Test invalid project ID
+
+```bash
+curl http://127.0.0.1:5000/api/projects/999/tasks/1 | python3 -m json.tool
+```
+
+### Test wrong project/task pairing
+
+```bash
+curl http://127.0.0.1:5000/api/projects/2/tasks/1 | python3 -m json.tool
+```
