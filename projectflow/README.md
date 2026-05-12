@@ -152,3 +152,34 @@ curl -X POST http://127.0.0.1:5000/api/tasks \
     "due_date": "2026-06-10"
   }' | python3 -m json.tool
 ```
+
+## One-to-Many Relationship Testing
+
+### Get all tasks for one project
+
+This endpoint returns one project and all tasks connected to that project.
+
+```bash
+curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
+```
+
+### Test invalid project ID
+
+```bash
+curl http://127.0.0.1:5000/api/projects/999/tasks | python3 -m json.tool
+```
+
+### Test invalid foreign key when creating a task
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_id": 999,
+    "task_title": "Invalid task",
+    "task_description": "This task should fail because project 999 does not exist.",
+    "priority": "Low",
+    "status": "Not Started",
+    "due_date": "2026-06-10"
+  }' | python3 -m json.tool
+```
