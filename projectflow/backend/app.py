@@ -72,8 +72,8 @@ def get_projects():
     return jsonify([dict(project) for project in projects])
 
 
-@app.route("/api/projects/<int:project_id>", methods=["GET"])
-def get_project(project_id):
+@app.route("/api/projects/<int:project_id>/tasks", methods=["GET"])
+def get_tasks_by_project(project_id):
     conn = get_db_connection()
 
     project = conn.execute(
@@ -81,12 +81,21 @@ def get_project(project_id):
         (project_id,)
     ).fetchone()
 
-    conn.close()
-
     if project is None:
+        conn.close()
         return jsonify({"error": "Project not found"}), 404
 
-    return jsonify(dict(project))
+    tasks = conn.execute(
+        "SELECT * FROM tasks WHERE project_id = ?",
+        (project_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify({
+        "project": dict(project),
+        "tasks": [dict(task) for task in tasks]
+    })
 
 
 @app.route("/api/projects", methods=["POST"])

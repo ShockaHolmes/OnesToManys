@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict, Any
 
 
 @dataclass
@@ -10,6 +10,7 @@ class Project:
     start_date: str
     due_date: str
     project_id: Optional[int] = None
+    tasks: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self):
         return {
@@ -18,7 +19,8 @@ class Project:
             "description": self.description,
             "status": self.status,
             "start_date": self.start_date,
-            "due_date": self.due_date
+            "due_date": self.due_date,
+            "tasks": self.tasks
         }
 
     @classmethod
@@ -31,3 +33,6 @@ class Project:
             start_date=row["start_date"],
             due_date=row["due_date"]
         )
+
+    def add_task(self, task):
+        self.tasks.append(task)
