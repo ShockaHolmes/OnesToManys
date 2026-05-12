@@ -1,11 +1,7 @@
+from flask import Flask, jsonify
+from flask_cors import CORS
 import sqlite3
 from pathlib import Path
-
-from flask import Flask, jsonify
-try:
-    from flask_cors import CORS
-except ImportError:
-    CORS = lambda app: None
 
 app = Flask(__name__)
 CORS(app)
@@ -20,60 +16,38 @@ def get_db_connection():
     return conn
 
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
     return jsonify({
-        "message": "ProjectFlow API is running",
-        "endpoints": [
+        "success": True,
+        "message": "ProjectFlow API is running.",
+        "database": "Connected to projectflow.db",
+        "available_routes": [
             "/api/projects",
             "/api/tasks",
-            "/api/projects/<project_id>/tasks"
+            "/api/projects/1/tasks"
         ]
     })
 
 
-@app.route("/api/projects", methods=["GET"])
-def get_projects():
-    conn = get_db_connection()
-    projects = conn.execute("SELECT * FROM projects").fetchall()
-    conn.close()
-
-    return jsonify([dict(project) for project in projects])
-
-
-@app.route("/api/tasks", methods=["GET"])
-def get_tasks():
-    conn = get_db_connection()
-    tasks = conn.execute("SELECT * FROM tasks").fetchall()
-    conn.close()
-
-    return jsonify([dict(task) for task in tasks])
-
-
-@app.route("/api/projects/<int:project_id>/tasks", methods=["GET"])
-def get_tasks_by_project(project_id):
-    conn = get_db_connection()
-
-    project = conn.execute(
-        "SELECT * FROM projects WHERE project_id = ?",
-        (project_id,)
-    ).fetchone()
-
-    if project is None:
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    try:
+        conn = get_db_connection()
+        conn.execute("SELECT 1").fetchone()
         conn.close()
-        return jsonify({"error": "Project not found"}), 404
 
-    tasks = conn.execute(
-        "SELECT * FROM tasks WHERE project_id = ?",
-        (project_id,)
-    ).fetchall()
+        return jsonify({
+            "success": True,
+            "message": "Backend server is running and database connection works."
+        })
 
-    conn.close()
-
-    return jsonify({
-        "project": dict(project),
-        "tasks": [dict(task) for task in tasks]
-    })
+    except Exception as error:
+        return jsonify({
+            "success": False,
+            "message": "Backend server is running, but database connection failed.",
+            "error": str(error)
+        }), 500
 
 
 if __name__ == "__main__":
