@@ -13,6 +13,7 @@ DB_PATH = BASE_DIR / "database" / "projectflow.db"
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 
@@ -29,6 +30,10 @@ def home():
             "PUT /api/projects/<project_id>",
             "DELETE /api/projects/<project_id>",
             "GET /api/tasks",
+            "GET /api/tasks/<task_id>",
+            "POST /api/tasks",
+            "PUT /api/tasks/<task_id>",
+            "DELETE /api/tasks/<task_id>",
             "GET /api/health"
         ]
     })
@@ -232,6 +237,184 @@ def get_tasks():
     conn.close()
 
     return jsonify([dict(task) for task in tasks])
+
+
+@app.route("/api/tasks/<int:task_id>", methods=["GET"])
+def get_task(task_id):
+    conn = get_db_connection()
+
+    task = conn.execute(
+        "SELECT * FROM tasks WHERE task_id = ?",
+        (task_id,)
+    ).fetchone()
+
+    conn.close()
+
+    if task is None:
+        return jsonify({"error": "Task not found"}), 404
+
+    return jsonify(dict(task))
+
+
+@app.route("/api/tasks", methods=["POST"])
+def create_task():
+    data = request.get_json() or {}
+
+    required_fields = ["project_id", "task_title", "priority", "status"]
+
+    for field in required_fields:
+        if field not in data or data[field] == "":
+            return jsonify({"error": f"{field} is required"}), 400
+
+    project_id = data["project_id"]
+    task_title = data["task_title"]
+    task_description = data.get("task_description", "")
+    priority = data["priority"]
+    status = data["status"]
+    due_date = data.get("due_date", "")
+
+    conn = get_db_connection()
+
+    project = conn.execute(
+        "SELECT * FROM projects WHERE project_id = ?",
+        (project_id,)
+    ).fetchone()
+
+    if project is None:
+        conn.close()
+        return jsonify({
+            "error": "Cannot create task because project_id does not exist"
+        }), 400
+
+    cursor = conn.execute(
+        """
+        INSERT INTO tasks (
+            project_id,
+            task_title,
+            task_description,
+            priority,
+            status,
+            due_date
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            project_id,
+            task_title,
+            task_description,
+            priority,
+            status,
+            due_date
+        )
+    )
+
+    conn.commit()
+
+    new_task_id = cursor.lastrowid
+
+    new_task = conn.execute(
+        "SELECT * FROM tasks WHERE task_id = ?",
+        (new_task_id,)
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify(dict(new_task)), 201
+
+
+@app.route("/api/tasks/<int:task_id>", methods=["PUT"])
+def update_task(task_id):
+    data = request.get_json() or {}
+
+    conn = get_db_connection()
+
+    existing_task = conn.execute(
+        "SELECT * FROM tasks WHERE task_id = ?",
+        (task_id,)
+    ).fetchone()
+
+    if existing_task is None:
+        conn.close()
+        return jsonify({"error": "Task not found"}), 404
+
+    project_id = data.get("project_id", existing_task["project_id"])
+
+    project = conn.execute(
+        "SELECT * FROM projects WHERE project_id = ?",
+        (project_id,)
+    ).fetchone()
+
+    if project is None:
+        conn.close()
+        return jsonify({
+            "error": "Cannot update task because project_id does not exist"
+        }), 400
+
+    task_title = data.get("task_title", existing_task["task_title"])
+    task_description = data.get("task_description", existing_task["task_description"])
+    priority = data.get("priority", existing_task["priority"])
+    status = data.get("status", existing_task["status"])
+    due_date = data.get("due_date", existing_task["due_date"])
+
+    conn.execute(
+        """
+        UPDATE tasks
+        SET project_id = ?,
+            task_title = ?,
+            task_description = ?,
+            priority = ?,
+            status = ?,
+            due_date = ?
+        WHERE task_id = ?
+        """,
+        (
+            project_id,
+            task_title,
+            task_description,
+            priority,
+            status,
+            due_date,
+            task_id
+        )
+    )
+
+    conn.commit()
+
+    updated_task = conn.execute(
+        "SELECT * FROM tasks WHERE task_id = ?",
+        (task_id,)
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify(dict(updated_task))
+
+
+@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+def delete_task(task_id):
+    conn = get_db_connection()
+
+    existing_task = conn.execute(
+        "SELECT * FROM tasks WHERE task_id = ?",
+        (task_id,)
+    ).fetchone()
+
+    if existing_task is None:
+        conn.close()
+        return jsonify({"error": "Task not found"}), 404
+
+    conn.execute(
+        "DELETE FROM tasks WHERE task_id = ?",
+        (task_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "message": "Task deleted successfully",
+        "deleted_task_id": task_id
+    })
 
 
 if __name__ == "__main__":

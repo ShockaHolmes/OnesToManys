@@ -88,3 +88,67 @@ Delete a project
 
 curl -X DELETE http://127.0.0.1:5000/api/projects/2 | python3 -m json.tool
 
+## Task CRUD API Testing
+
+### Get all tasks
+
+```bash
+curl http://127.0.0.1:5000/api/tasks | python3 -m json.tool
+```
+
+### Get one task
+
+```bash
+curl http://127.0.0.1:5000/api/tasks/1 | python3 -m json.tool
+```
+
+### Create a task
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_id": 1,
+    "task_title": "Create risk score system",
+    "task_description": "Build a simple risk score system that helps identify youth who may need housing, education, employment, or mentoring support.",
+    "priority": "High",
+    "status": "Not Started",
+    "due_date": "2026-06-01"
+  }' | python3 -m json.tool
+```
+
+### Update a task
+
+```bash
+curl -X PUT http://127.0.0.1:5000/api/tasks/4 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_id": 1,
+    "task_title": "Create youth risk score system",
+    "task_description": "Update the risk score system to include housing, education, employment, and support-service needs.",
+    "priority": "High",
+    "status": "In Progress",
+    "due_date": "2026-06-03"
+  }' | python3 -m json.tool
+```
+
+### Delete a task
+
+```bash
+curl -X DELETE http://127.0.0.1:5000/api/tasks/4 | python3 -m json.tool
+```
+
+### Test invalid project ID
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_id": 999,
+    "task_title": "Invalid task",
+    "task_description": "This should fail because project 999 does not exist.",
+    "priority": "Low",
+    "status": "Not Started",
+    "due_date": "2026-06-10"
+  }' | python3 -m json.tool
+```
