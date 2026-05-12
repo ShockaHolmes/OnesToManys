@@ -270,3 +270,39 @@ curl http://127.0.0.1:5000/api/projects/999/tasks/1 | python3 -m json.tool
 ```bash
 curl http://127.0.0.1:5000/api/projects/2/tasks/1 | python3 -m json.tool
 ```
+## Curl API Testing
+
+The API was tested using curl from the terminal.
+
+Tested endpoint groups:
+
+- Master CRUD endpoints for `projects`
+- Detail CRUD endpoints for `tasks`
+- Nested relationship endpoints for `projects/{id}/tasks`
+
+Saved testing evidence:
+
+- `docs/curl-tests/api-test-results.txt`
+
+Example test command:
+
+```bash
+curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
+## Curl API Testing
+
+The API was tested using curl from the terminal.
+
+Tested endpoint groups:
+
+- Master CRUD endpoints for `projects`
+- Detail CRUD endpoints for `tasks`
+- Nested relationship endpoints for `projects/{id}/tasks`
+
+Saved testing evidence:
+
+- `docs/curl-tests/api-test-results.txt`
+
+Example test command:
+
+```bash
+curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
