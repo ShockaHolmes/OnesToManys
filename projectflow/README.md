@@ -48,3 +48,43 @@ curl http://127.0.0.1:5000/api/tasks
 Pretty JSON version:
 
 curl http://127.0.0.1:5000/api/tasks | python3 -m json.tool
+
+## Project CRUD API Testing
+
+### Get all projects
+
+```bash
+curl http://127.0.0.1:5000/api/projects | python3 -m json.tool
+
+Get one project
+
+curl http://127.0.0.1:5000/api/projects/1 | python3 -m json.tool
+
+Create a project
+
+curl -X POST http://127.0.0.1:5000/api/projects \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_name": "Portfolio Website",
+    "description": "Create a personal portfolio website to show projects, skills, and resume information.",
+    "status": "Not Started",
+    "start_date": "2026-05-15",
+    "due_date": "2026-06-01"
+  }' | python3 -m json.tool
+
+Update a project
+
+curl -X PUT http://127.0.0.1:5000/api/projects/2 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_name": "Updated Portfolio Website",
+    "description": "Create a stronger portfolio website with GitHub links, project screenshots, and contact information.",
+    "status": "In Progress",
+    "start_date": "2026-05-15",
+    "due_date": "2026-06-05"
+  }' | python3 -m json.tool
+
+Delete a project
+
+curl -X DELETE http://127.0.0.1:5000/api/projects/2 | python3 -m json.tool
+
