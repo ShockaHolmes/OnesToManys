@@ -34,6 +34,7 @@ def home():
             "POST /api/tasks",
             "PUT /api/tasks/<task_id>",
             "DELETE /api/tasks/<task_id>",
+            "GET /api/projects/<project_id>/tasks",
             "GET /api/health"
         ]
     })
@@ -424,7 +425,6 @@ def delete_task(task_id):
         "message": "Task deleted successfully",
         "deleted_task_id": task_id
     })
-
 
 if __name__ == "__main__":
     app.run(debug=True)
