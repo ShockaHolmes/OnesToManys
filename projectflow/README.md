@@ -198,3 +198,54 @@ curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
 ```bash
 curl http://127.0.0.1:5000/api/projects/999/tasks | python3 -m json.tool
 ```
+
+## Create a Task Under a Project
+
+This endpoint creates a detail record directly under a selected master record.
+
+### Create a task under Project 1
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/projects/1/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_title": "Create resource recommendation logic",
+    "task_description": "Build logic that recommends housing, education, employment, and mentoring resources for youth records.",
+    "priority": "High",
+    "status": "Not Started",
+    "due_date": "2026-06-08"
+  }' | python3 -m json.tool
+```
+
+### Confirm Project 1 includes the new task
+
+```bash
+curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
+```
+
+### Test invalid project ID
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/projects/999/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_title": "Invalid project task",
+    "task_description": "This should fail because Project 999 does not exist.",
+    "priority": "Low",
+    "status": "Not Started",
+    "due_date": "2026-06-15"
+  }' | python3 -m json.tool
+```
+
+### Test missing required field
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/projects/1/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_description": "This should fail because task_title is missing.",
+    "priority": "Medium",
+    "status": "Not Started",
+    "due_date": "2026-06-15"
+  }' | python3 -m json.tool
+```
