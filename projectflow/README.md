@@ -379,4 +379,61 @@ curl -X POST http://127.0.0.1:5000/api/import/json \
   -H "Content-Type: application/json" \
   -d '{"file_name": "missing_file.json"}' | python3 -m json.tool
 ```
+## Vanilla JavaScript Frontend Setup
+
+The Vanilla JavaScript frontend is located in:
+
+```text
+frontend-vanilla/
+```
+
+It includes:
+
+- `index.html`
+- `styles.css`
+- `script.js`
+
+### 1. Start the Flask backend
+
+```bash
+cd backend
+source .venv/bin/activate
+python3 app.py
+```
+
+The backend should run at:
+
+```text
+http://127.0.0.1:5000
+```
+
+### 2. Start the Vanilla JavaScript frontend
+
+Open a second terminal:
+
+```bash
+cd frontend-vanilla
+python3 -m http.server 5500
+```
+
+### 3. Open the frontend in the browser
+
+```text
+http://localhost:5500
+```
+
+### 4. Test the page
+
+Click:
+
+- Check API Connection
+- Load Projects
+- Load Tasks
+- Load Foster Path Dashboard Tasks
+
+If the Flask backend runs on port `5001`, update this line in `frontend-vanilla/script.js`:
+
+```javascript
+const API_BASE_URL = "http://127.0.0.1:5001";
+```
 
