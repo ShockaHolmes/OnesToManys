@@ -1,9 +1,19 @@
-from flask import Flask, jsonify, request
-from flask_cors import CORS
 import os
 import socket
+import sys
 import sqlite3
 from pathlib import Path
+
+
+PROJECT_DIR = Path(__file__).resolve().parent
+VENV_PYTHON = PROJECT_DIR / ".venv" / "bin" / "python"
+
+
+if VENV_PYTHON.exists() and Path(sys.executable).resolve() != VENV_PYTHON.resolve():
+    os.execv(str(VENV_PYTHON), [str(VENV_PYTHON), str(Path(__file__).resolve()), *sys.argv[1:]])
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
@@ -37,6 +47,7 @@ def home():
             "PUT /api/tasks/<task_id>",
             "DELETE /api/tasks/<task_id>",
             "GET /api/projects/<project_id>/tasks",
+            "POST /api/projects/<project_id>/tasks",
             "GET /api/health"
         ]
     })
@@ -428,15 +439,88 @@ def delete_task(task_id):
         "deleted_task_id": task_id
     })
 
+
+@app.route("/api/projects/<int:project_id>/tasks", methods=["POST"])
+def create_task_for_project(project_id):
+    data = request.get_json() or {}
+
+    required_fields = ["task_title", "priority", "status"]
+
+    for field in required_fields:
+        if field not in data or data[field] == "":
+            return jsonify({
+                "error": f"{field} is required"
+            }), 400
+
+    task_title = data["task_title"]
+    task_description = data.get("task_description", "")
+    priority = data["priority"]
+    status = data["status"]
+    due_date = data.get("due_date", "")
+
+    conn = get_db_connection()
+
+    project = conn.execute(
+        "SELECT * FROM projects WHERE project_id = ?",
+        (project_id,)
+    ).fetchone()
+
+    if project is None:
+        conn.close()
+        return jsonify({
+            "error": "Cannot create task because project does not exist",
+            "project_id": project_id
+        }), 404
+
+    cursor = conn.execute(
+        """
+        INSERT INTO tasks (
+            project_id,
+            task_title,
+            task_description,
+            priority,
+            status,
+            due_date
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            project_id,
+            task_title,
+            task_description,
+            priority,
+            status,
+            due_date
+        )
+    )
+
+    conn.commit()
+
+    new_task_id = cursor.lastrowid
+
+    new_task = conn.execute(
+        "SELECT * FROM tasks WHERE task_id = ?",
+        (new_task_id,)
+    ).fetchone()
+
+    conn.close()
+
+    return jsonify({
+        "message": "Task created successfully under project",
+        "project_id": project_id,
+        "task": dict(new_task)
+    }), 201
+
+
 if __name__ == "__main__":
     requested_port = int(os.getenv("PORT", "5000"))
     host = "127.0.0.1"
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        if sock.connect_ex((host, requested_port)) == 0:
-            fallback_port = 5001
-            while sock.connect_ex((host, fallback_port)) == 0:
-                fallback_port += 1
-            requested_port = fallback_port
+    def port_is_in_use(port):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            return sock.connect_ex((host, port)) == 0
+
+    while port_is_in_use(requested_port):
+        requested_port += 1
 
     app.run(debug=True, host=host, port=requested_port)
