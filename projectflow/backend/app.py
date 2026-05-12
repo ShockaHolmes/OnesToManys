@@ -10,13 +10,19 @@ VENV_PYTHON = PROJECT_DIR / ".venv" / "bin" / "python"
 
 
 if VENV_PYTHON.exists() and Path(sys.executable).resolve() != VENV_PYTHON.resolve():
-    os.execv(str(VENV_PYTHON), [str(VENV_PYTHON), str(Path(__file__).resolve()), *sys.argv[1:]])
+    os.execv(
+        str(VENV_PYTHON),
+        [str(VENV_PYTHON), str(Path(__file__).resolve()), *sys.argv[1:]]
+    )
+
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+
 app = Flask(__name__)
 CORS(app)
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "database" / "projectflow.db"
@@ -36,19 +42,22 @@ def home():
         "message": "ProjectFlow API is running.",
         "database": "Connected to projectflow.db",
         "available_routes": [
+            "GET /api/health",
+
             "GET /api/projects",
             "GET /api/projects/<project_id>",
             "POST /api/projects",
             "PUT /api/projects/<project_id>",
             "DELETE /api/projects/<project_id>",
+
             "GET /api/tasks",
             "GET /api/tasks/<task_id>",
             "POST /api/tasks",
             "PUT /api/tasks/<task_id>",
             "DELETE /api/tasks/<task_id>",
+
             "GET /api/projects/<project_id>/tasks",
-            "POST /api/projects/<project_id>/tasks",
-            "GET /api/health"
+            "POST /api/projects/<project_id>/tasks"
         ]
     })
 
@@ -73,6 +82,11 @@ def health_check():
         }), 500
 
 
+# ---------------------------------------------------------
+# PROJECT ROUTES
+# Master table: projects
+# ---------------------------------------------------------
+
 @app.route("/api/projects", methods=["GET"])
 def get_projects():
     conn = get_db_connection()
@@ -86,8 +100,8 @@ def get_projects():
     return jsonify([dict(project) for project in projects])
 
 
-@app.route("/api/projects/<int:project_id>/tasks", methods=["GET"])
-def get_tasks_by_project(project_id):
+@app.route("/api/projects/<int:project_id>", methods=["GET"])
+def get_project(project_id):
     conn = get_db_connection()
 
     project = conn.execute(
@@ -95,32 +109,28 @@ def get_tasks_by_project(project_id):
         (project_id,)
     ).fetchone()
 
-    if project is None:
-        conn.close()
-        return jsonify({"error": "Project not found"}), 404
-
-    tasks = conn.execute(
-        "SELECT * FROM tasks WHERE project_id = ?",
-        (project_id,)
-    ).fetchall()
-
     conn.close()
 
-    return jsonify({
-        "project": dict(project),
-        "tasks": [dict(task) for task in tasks]
-    })
+    if project is None:
+        return jsonify({
+            "error": "Project not found",
+            "project_id": project_id
+        }), 404
+
+    return jsonify(dict(project))
 
 
 @app.route("/api/projects", methods=["POST"])
 def create_project():
-    data = request.get_json()
+    data = request.get_json() or {}
 
     required_fields = ["project_name", "status"]
 
     for field in required_fields:
         if field not in data or data[field] == "":
-            return jsonify({"error": f"{field} is required"}), 400
+            return jsonify({
+                "error": f"{field} is required"
+            }), 400
 
     project_name = data["project_name"]
     description = data.get("description", "")
@@ -166,7 +176,7 @@ def create_project():
 
 @app.route("/api/projects/<int:project_id>", methods=["PUT"])
 def update_project(project_id):
-    data = request.get_json()
+    data = request.get_json() or {}
 
     conn = get_db_connection()
 
@@ -177,7 +187,10 @@ def update_project(project_id):
 
     if existing_project is None:
         conn.close()
-        return jsonify({"error": "Project not found"}), 404
+        return jsonify({
+            "error": "Project not found",
+            "project_id": project_id
+        }), 404
 
     project_name = data.get("project_name", existing_project["project_name"])
     description = data.get("description", existing_project["description"])
@@ -228,9 +241,11 @@ def delete_project(project_id):
 
     if existing_project is None:
         conn.close()
-        return jsonify({"error": "Project not found"}), 404
+        return jsonify({
+            "error": "Project not found",
+            "project_id": project_id
+        }), 404
 
-    # Delete related tasks first so there are no orphan task records.
     conn.execute(
         "DELETE FROM tasks WHERE project_id = ?",
         (project_id,)
@@ -248,6 +263,12 @@ def delete_project(project_id):
         "message": "Project and related tasks deleted successfully",
         "deleted_project_id": project_id
     })
+
+
+# ---------------------------------------------------------
+# TASK ROUTES
+# Detail table: tasks
+# ---------------------------------------------------------
 
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
@@ -274,7 +295,10 @@ def get_task(task_id):
     conn.close()
 
     if task is None:
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({
+            "error": "Task not found",
+            "task_id": task_id
+        }), 404
 
     return jsonify(dict(task))
 
@@ -287,7 +311,9 @@ def create_task():
 
     for field in required_fields:
         if field not in data or data[field] == "":
-            return jsonify({"error": f"{field} is required"}), 400
+            return jsonify({
+                "error": f"{field} is required"
+            }), 400
 
     project_id = data["project_id"]
     task_title = data["task_title"]
@@ -306,7 +332,8 @@ def create_task():
     if project is None:
         conn.close()
         return jsonify({
-            "error": "Cannot create task because project_id does not exist"
+            "error": "Cannot create task because project_id does not exist",
+            "project_id": project_id
         }), 400
 
     cursor = conn.execute(
@@ -358,7 +385,10 @@ def update_task(task_id):
 
     if existing_task is None:
         conn.close()
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({
+            "error": "Task not found",
+            "task_id": task_id
+        }), 404
 
     project_id = data.get("project_id", existing_task["project_id"])
 
@@ -370,7 +400,8 @@ def update_task(task_id):
     if project is None:
         conn.close()
         return jsonify({
-            "error": "Cannot update task because project_id does not exist"
+            "error": "Cannot update task because project_id does not exist",
+            "project_id": project_id
         }), 400
 
     task_title = data.get("task_title", existing_task["task_title"])
@@ -424,7 +455,10 @@ def delete_task(task_id):
 
     if existing_task is None:
         conn.close()
-        return jsonify({"error": "Task not found"}), 404
+        return jsonify({
+            "error": "Task not found",
+            "task_id": task_id
+        }), 404
 
     conn.execute(
         "DELETE FROM tasks WHERE task_id = ?",
@@ -437,6 +471,40 @@ def delete_task(task_id):
     return jsonify({
         "message": "Task deleted successfully",
         "deleted_task_id": task_id
+    })
+
+
+# ---------------------------------------------------------
+# ONE-TO-MANY RELATIONSHIP ROUTES
+# Project -> Tasks
+# ---------------------------------------------------------
+
+@app.route("/api/projects/<int:project_id>/tasks", methods=["GET"])
+def get_tasks_by_project(project_id):
+    conn = get_db_connection()
+
+    project = conn.execute(
+        "SELECT * FROM projects WHERE project_id = ?",
+        (project_id,)
+    ).fetchone()
+
+    if project is None:
+        conn.close()
+        return jsonify({
+            "error": "Project not found",
+            "project_id": project_id
+        }), 404
+
+    tasks = conn.execute(
+        "SELECT * FROM tasks WHERE project_id = ?",
+        (project_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify({
+        "project": dict(project),
+        "tasks": [dict(task) for task in tasks]
     })
 
 
