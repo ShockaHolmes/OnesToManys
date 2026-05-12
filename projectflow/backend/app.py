@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import os
+import socket
 import sqlite3
 from pathlib import Path
 
@@ -427,4 +429,14 @@ def delete_task(task_id):
     })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    requested_port = int(os.getenv("PORT", "5000"))
+    host = "127.0.0.1"
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        if sock.connect_ex((host, requested_port)) == 0:
+            fallback_port = 5001
+            while sock.connect_ex((host, fallback_port)) == 0:
+                fallback_port += 1
+            requested_port = fallback_port
+
+    app.run(debug=True, host=host, port=requested_port)
