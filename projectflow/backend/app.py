@@ -61,6 +61,18 @@ def get_projects():
 
     return jsonify([dict(project) for project in projects])
 
+@app.route("/api/tasks", methods=["GET"])
+def get_tasks():
+    conn = get_db_connection()
+
+    tasks = conn.execute(
+        "SELECT * FROM tasks"
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([dict(task) for task in tasks])
+
 
 if __name__ == "__main__":
     app.run(debug=True)

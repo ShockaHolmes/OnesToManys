@@ -38,3 +38,13 @@ For pretty JSON version:
 ```bash
 curl http://127.0.0.1:5000/api/projects
 
+## Get All Tasks
+
+This endpoint returns all detail records from the `tasks` table.
+
+```bash
+curl http://127.0.0.1:5000/api/tasks
+
+Pretty JSON version:
+
+curl http://127.0.0.1:5000/api/tasks | python3 -m json.tool
