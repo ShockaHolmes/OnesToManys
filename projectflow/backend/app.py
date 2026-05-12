@@ -24,8 +24,7 @@ def home():
         "database": "Connected to projectflow.db",
         "available_routes": [
             "/api/projects",
-            "/api/tasks",
-            "/api/projects/1/tasks"
+            "/api/health"
         ]
     })
 
@@ -48,6 +47,19 @@ def health_check():
             "message": "Backend server is running, but database connection failed.",
             "error": str(error)
         }), 500
+
+
+@app.route("/api/projects", methods=["GET"])
+def get_projects():
+    conn = get_db_connection()
+
+    projects = conn.execute(
+        "SELECT * FROM projects"
+    ).fetchall()
+
+    conn.close()
+
+    return jsonify([dict(project) for project in projects])
 
 
 if __name__ == "__main__":

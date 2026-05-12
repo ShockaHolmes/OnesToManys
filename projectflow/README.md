@@ -18,3 +18,23 @@ python3 app.py
 curl http://127.0.0.1:5000/
 
 curl http://127.0.0.1:5000/api/health
+
+## API Testing
+
+### Get all projects
+
+This endpoint returns all master records from the `projects` table.
+
+```bash
+curl http://127.0.0.1:5000/api/projects
+
+## API Testing
+
+### Get all projects
+
+This endpoint returns all master records from the `projects` table.
+
+For pretty JSON version:
+```bash
+curl http://127.0.0.1:5000/api/projects
+
