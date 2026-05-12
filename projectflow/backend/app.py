@@ -62,6 +62,7 @@ def home():
             "GET /api/projects/<project_id>/tasks/<task_id>",
             "POST /api/projects/<project_id>/tasks"
             "GET /api/export/json",
+            "POST /api/import/json",
         ]
     })
 
@@ -679,6 +680,172 @@ def export_data_to_json():
         "project_count": len(export_data["projects"]),
         "task_count": len(export_data["tasks"]),
         "relationship_count": len(export_data["projects_with_tasks"])
+    })
+
+# ---------------------------------------------------------
+# DATA IMPORT ROUTES
+# ---------------------------------------------------------
+
+@app.route("/api/import/json", methods=["POST"])
+def import_data_from_json():
+    data = request.get_json(silent=True) or {}
+
+    file_name = data.get("file_name", "projectflow_export.json")
+
+    if Path(file_name).name != file_name:
+        return jsonify({
+            "error": "Invalid file name. Do not include folders or path characters."
+        }), 400
+
+    import_file = EXPORT_DIR / file_name
+
+    if not import_file.exists():
+        return jsonify({
+            "error": "Import file not found",
+            "file_path": str(import_file),
+            "hint": "Run GET /api/export/json first to create projectflow_export.json."
+        }), 404
+
+    try:
+        with open(import_file, "r", encoding="utf-8") as file:
+            import_data = json.load(file)
+
+    except json.JSONDecodeError as error:
+        return jsonify({
+            "error": "Invalid JSON file",
+            "details": str(error)
+        }), 400
+
+    projects = import_data.get("projects", [])
+    tasks = import_data.get("tasks", [])
+
+    if not tasks and "projects_with_tasks" in import_data:
+        for project in import_data["projects_with_tasks"]:
+            tasks.extend(project.get("tasks", []))
+
+    if not isinstance(projects, list):
+        return jsonify({
+            "error": "Invalid import format. 'projects' must be a list."
+        }), 400
+
+    if not isinstance(tasks, list):
+        return jsonify({
+            "error": "Invalid import format. 'tasks' must be a list."
+        }), 400
+
+    required_project_fields = ["project_id", "project_name", "status"]
+    required_task_fields = ["task_id", "project_id", "task_title", "priority", "status"]
+
+    for project in projects:
+        for field in required_project_fields:
+            if field not in project or project[field] in ("", None):
+                return jsonify({
+                    "error": f"Project record is missing required field: {field}",
+                    "record": project
+                }), 400
+
+    project_ids = {project["project_id"] for project in projects}
+
+    for task in tasks:
+        for field in required_task_fields:
+            if field not in task or task[field] in ("", None):
+                return jsonify({
+                    "error": f"Task record is missing required field: {field}",
+                    "record": task
+                }), 400
+
+        if task["project_id"] not in project_ids:
+            return jsonify({
+                "error": "Task has an invalid project_id",
+                "task_id": task.get("task_id"),
+                "invalid_project_id": task.get("project_id"),
+                "valid_project_ids": sorted(list(project_ids))
+            }), 400
+
+    conn = get_db_connection()
+
+    try:
+        conn.execute("BEGIN")
+
+        conn.execute("DELETE FROM tasks")
+        conn.execute("DELETE FROM projects")
+        conn.execute("DELETE FROM sqlite_sequence WHERE name IN ('projects', 'tasks')")
+
+        for project in projects:
+            conn.execute(
+                """
+                INSERT INTO projects (
+                    project_id,
+                    project_name,
+                    description,
+                    status,
+                    start_date,
+                    due_date
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    project["project_id"],
+                    project["project_name"],
+                    project.get("description", ""),
+                    project["status"],
+                    project.get("start_date", ""),
+                    project.get("due_date", "")
+                )
+            )
+
+        for task in tasks:
+            conn.execute(
+                """
+                INSERT INTO tasks (
+                    task_id,
+                    project_id,
+                    task_title,
+                    task_description,
+                    priority,
+                    status,
+                    due_date
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    task["task_id"],
+                    task["project_id"],
+                    task["task_title"],
+                    task.get("task_description", ""),
+                    task["priority"],
+                    task["status"],
+                    task.get("due_date", "")
+                )
+            )
+
+        conn.commit()
+
+    except sqlite3.IntegrityError as error:
+        conn.rollback()
+        conn.close()
+
+        return jsonify({
+            "error": "Database integrity error while importing data",
+            "details": str(error)
+        }), 400
+
+    except Exception as error:
+        conn.rollback()
+        conn.close()
+
+        return jsonify({
+            "error": "Unexpected error while importing data",
+            "details": str(error)
+        }), 500
+
+    conn.close()
+
+    return jsonify({
+        "message": "Data imported successfully",
+        "file_path": str(import_file),
+        "project_count": len(projects),
+        "task_count": len(tasks)
     })
 
 

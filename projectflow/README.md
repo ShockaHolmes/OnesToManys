@@ -334,3 +334,49 @@ curl http://127.0.0.1:5000/api/export/json | python3 -m json.tool
 ```text
 database/exports/projectflow_export.json
 ```
+## Import Data from JSON
+
+This endpoint reloads saved database data from a JSON export file.
+
+The import reloads:
+
+- Master records into the `projects` table
+- Detail records into the `tasks` table
+- Foreign key relationships between projects and tasks
+
+### Default import file
+
+```text
+database/exports/projectflow_export.json
+```
+
+### Endpoint
+
+```bash
+POST /api/import/json
+```
+
+### Import from the default file
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/import/json \
+  -H "Content-Type: application/json" \
+  -d '{}' | python3 -m json.tool
+```
+
+### Import from a specific file in the exports folder
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/import/json \
+  -H "Content-Type: application/json" \
+  -d '{"file_name": "projectflow_export.json"}' | python3 -m json.tool
+```
+
+### Test missing file error
+
+```bash
+curl -X POST http://127.0.0.1:5000/api/import/json \
+  -H "Content-Type: application/json" \
+  -d '{"file_name": "missing_file.json"}' | python3 -m json.tool
+```
+

@@ -1,0 +1,146 @@
+Import Data From JSON
+{
+  "file_path": "/Users/shocka/Projects/OnesToManys/projectflow/database/exports/projectflow_export.json",
+  "message": "Data imported successfully",
+  "project_count": 2,
+  "task_count": 5
+}
+
+
+Confirm Projects Loaded
+[
+  {
+    "description": "A data dashboard project that helps identify support needs for youth aging out of the foster care system and connects them with helpful resources.",
+    "due_date": "2026-06-12",
+    "project_id": 1,
+    "project_name": "Foster Path Dashboard",
+    "start_date": "2026-05-12",
+    "status": "In Progress"
+  },
+  {
+    "description": "Create a personal portfolio website.",
+    "due_date": "2026-06-01",
+    "project_id": 3,
+    "project_name": "Portfolio Website",
+    "start_date": "2026-05-15",
+    "status": "Not Started"
+  }
+]
+
+
+Confirm Tasks Loaded
+[
+  {
+    "due_date": "2026-05-16",
+    "priority": "High",
+    "project_id": 1,
+    "status": "Not Started",
+    "task_description": "Create sample youth records that include age, housing status, education status, employment status, and support needs.",
+    "task_id": 1,
+    "task_title": "Create youth data"
+  },
+  {
+    "due_date": "2026-05-20",
+    "priority": "High",
+    "project_id": 1,
+    "status": "In Progress",
+    "task_description": "Design and create the database structure needed to store project data, youth data, service resources, and dashboard information.",
+    "task_id": 2,
+    "task_title": "Build database schema"
+  },
+  {
+    "due_date": "2026-05-28",
+    "priority": "Medium",
+    "project_id": 1,
+    "status": "Not Started",
+    "task_description": "Build visual charts that show risk levels, service needs, task progress, and resource recommendations.",
+    "task_id": 3,
+    "task_title": "Create dashboard charts"
+  },
+  {
+    "due_date": "2026-06-01",
+    "priority": "High",
+    "project_id": 1,
+    "status": "Not Started",
+    "task_description": "Build a simple risk score system for youth support needs.",
+    "task_id": 7,
+    "task_title": "Create risk score system"
+  },
+  {
+    "due_date": "2026-06-08",
+    "priority": "High",
+    "project_id": 1,
+    "status": "Not Started",
+    "task_description": "Build logic that recommends housing, education, employment, and mentoring resources for youth records.",
+    "task_id": 8,
+    "task_title": "Create resource recommendation logic"
+  }
+]
+
+
+Confirm Relationship Loaded
+{
+  "project": {
+    "description": "A data dashboard project that helps identify support needs for youth aging out of the foster care system and connects them with helpful resources.",
+    "due_date": "2026-06-12",
+    "project_id": 1,
+    "project_name": "Foster Path Dashboard",
+    "start_date": "2026-05-12",
+    "status": "In Progress"
+  },
+  "tasks": [
+    {
+      "due_date": "2026-05-16",
+      "priority": "High",
+      "project_id": 1,
+      "status": "Not Started",
+      "task_description": "Create sample youth records that include age, housing status, education status, employment status, and support needs.",
+      "task_id": 1,
+      "task_title": "Create youth data"
+    },
+    {
+      "due_date": "2026-05-20",
+      "priority": "High",
+      "project_id": 1,
+      "status": "In Progress",
+      "task_description": "Design and create the database structure needed to store project data, youth data, service resources, and dashboard information.",
+      "task_id": 2,
+      "task_title": "Build database schema"
+    },
+    {
+      "due_date": "2026-05-28",
+      "priority": "Medium",
+      "project_id": 1,
+      "status": "Not Started",
+      "task_description": "Build visual charts that show risk levels, service needs, task progress, and resource recommendations.",
+      "task_id": 3,
+      "task_title": "Create dashboard charts"
+    },
+    {
+      "due_date": "2026-06-01",
+      "priority": "High",
+      "project_id": 1,
+      "status": "Not Started",
+      "task_description": "Build a simple risk score system for youth support needs.",
+      "task_id": 7,
+      "task_title": "Create risk score system"
+    },
+    {
+      "due_date": "2026-06-08",
+      "priority": "High",
+      "project_id": 1,
+      "status": "Not Started",
+      "task_description": "Build logic that recommends housing, education, employment, and mentoring resources for youth records.",
+      "task_id": 8,
+      "task_title": "Create resource recommendation logic"
+    }
+  ]
+}
+
+
+Missing File Error Test
+{
+  "error": "Import file not found",
+  "file_path": "/Users/shocka/Projects/OnesToManys/projectflow/database/exports/missing_file.json",
+  "hint": "Run GET /api/export/json first to create projectflow_export.json."
+}
