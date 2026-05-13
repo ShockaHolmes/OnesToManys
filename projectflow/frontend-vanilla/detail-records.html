@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProjectFlow - Detail Records</title>
+    <style>
+        :root {
+            --ink: #1f2937;
+            --muted: #6b7280;
+            --bg: #f5f7fb;
+            --surface: #ffffff;
+            --line: #e5e7eb;
+            --brand: #2563eb;
+            --brand-dark: #1e40af;
+            --danger: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top right, #dde7ff 0%, var(--bg) 45%);
+            color: var(--ink);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .page {
+            max-width: 1080px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            color: #fff;
+            padding: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--line);
+            background: #f9fbff;
+        }
+
+        .toolbar-left {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 0.6rem 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-refresh {
+            background: var(--brand);
+            color: #fff;
+        }
+
+        .btn-refresh:hover {
+            background: var(--brand-dark);
+        }
+
+        .btn-refresh:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .small-note,
+        .status {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .content {
+            padding: 1.25rem 1.5rem 1.5rem;
+        }
+
+        .message {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .message.error {
+            display: block;
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: var(--danger);
+        }
+
+        .message.info {
+            display: block;
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .records-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.9rem;
+        }
+
+        .record-card {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 0.95rem;
+            background: #fff;
+        }
+
+        .record-card h2 {
+            font-size: 1.05rem;
+            margin-bottom: 0.55rem;
+            word-break: break-word;
+        }
+
+        .record-meta {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .record-desc {
+            color: #374151;
+            font-size: 0.95rem;
+            line-height: 1.45;
+            margin-top: 0.35rem;
+            white-space: pre-wrap;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-right: 0.35rem;
+            margin-top: 0.25rem;
+        }
+
+        .pill-priority {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .pill-status {
+            background: #ecfeff;
+            color: #155e75;
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            padding: 0.8rem 1.5rem;
+            color: var(--muted);
+            font-size: 0.88rem;
+            background: #f9fafb;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 0.75rem;
+            }
+
+            .header,
+            .toolbar,
+            .content,
+            .footer {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.35rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="header">
+            <h1>ProjectFlow Detail Records</h1>
+            <p>All tasks from the REST API with their connected project.</p>
+        </header>
+
+        <section class="toolbar">
+            <div class="toolbar-left">
+                <button id="refreshBtn" class="btn btn-refresh" type="button">Refresh Data</button>
+                <span class="small-note">Endpoint: <strong id="apiPath"></strong></span>
+            </div>
+            <p id="statusText" class="status" aria-live="polite">Ready</p>
+        </section>
+
+        <section class="content">
+            <div id="messageBox" class="message" role="alert"></div>
+            <div id="recordsGrid" class="records-grid"></div>
+        </section>
+
+        <footer class="footer">
+            Last update: <span id="lastUpdated">Not loaded yet</span>
+        </footer>
+    </main>
+
+    <script src="detail-records.js"></script>
+</body>
+</html>

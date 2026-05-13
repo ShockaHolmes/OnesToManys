@@ -8,9 +8,11 @@ A lightweight, responsive web frontend for ProjectFlow built with pure HTML, CSS
 frontend-vanilla/
 ├── index.html      # Main HTML page
 ├── master-records.html  # Master records (projects) listing page
+├── detail-records.html  # Detail records (tasks) listing page
 ├── styles.css      # Styling (CSS)
 ├── script.js       # Application logic (JavaScript)
 ├── master-records.js # Master records page logic
+├── detail-records.js # Detail records page logic
 └── README.md       # This file
 ```
 
@@ -75,6 +77,20 @@ You can also open it from `index.html` using the **View All Master Records** lin
 
 This page includes:
 - Dynamic rendering of records from `GET /api/projects`
+- Loading state while data is being fetched
+- Error state when the API request fails
+- Manual refresh via a "Refresh Data" button
+- Automatic backend detection on `http://localhost:5000` through `http://localhost:5005`
+
+### Detail Records Page (Phase 3)
+
+Open `detail-records.html` to view all detail records (tasks) from the REST API.
+
+You can also open it from `index.html` using the **View All Detail Records** link in the header.
+
+This page includes:
+- Dynamic rendering of records from `GET /api/tasks`
+- Connected master information for each detail (project ID and project name when available)
 - Loading state while data is being fetched
 - Error state when the API request fails
 - Manual refresh via a "Refresh Data" button
@@ -173,6 +189,12 @@ const API_BASE_URL = 'http://your-backend-url:port';
 
 If your backend runs outside that range, edit `API_PORT_CANDIDATES` in `master-records.js`.
 
+### Detail Records Backend Detection
+
+`detail-records.js` automatically checks localhost ports `5000` through `5005` using `GET /api/health` and picks the first reachable backend.
+
+If your backend runs outside that range, edit `API_PORT_CANDIDATES` in `detail-records.js`.
+
 ## 🐛 Troubleshooting
 
 ### Backend Connection Error
@@ -183,8 +205,9 @@ If your backend runs outside that range, edit `API_PORT_CANDIDATES` in `master-r
 1. Make sure Flask backend is running: `python3 app.py` in the backend directory
 2. Check the port number (default is 5000, but may use 5001, 5002, etc. if 5000 is busy)
 3. For `master-records.html`, no manual change is needed if backend is on localhost `5000-5005`
-4. For `index.html`, update `API_BASE_URL` in `script.js` if needed
-5. Ensure CORS is enabled in Flask (it is by default)
+4. For `detail-records.html`, no manual change is needed if backend is on localhost `5000-5005`
+5. For `index.html`, update `API_BASE_URL` in `script.js` if needed
+6. Ensure CORS is enabled in Flask (it is by default)
 
 ### Projects/Tasks Not Loading
 

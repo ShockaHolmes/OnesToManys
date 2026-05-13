@@ -391,9 +391,11 @@ It includes:
 
 - `index.html`
 - `master-records.html`
+- `detail-records.html`
 - `styles.css`
 - `script.js`
 - `master-records.js`
+- `detail-records.js`
 
 ### 1. Start the Flask backend
 
@@ -415,14 +417,15 @@ Open a second terminal:
 
 ```bash
 cd frontend-vanilla
-python3 -m http.server 5500
+python3 -m http.server 8000
 ```
 
 ### 3. Open the frontend in the browser
 
 ```text
-http://localhost:5500/index.html
-http://localhost:5500/master-records.html
+http://localhost:8000/index.html
+http://localhost:8000/master-records.html
+http://localhost:8000/detail-records.html
 ```
 
 ### 4. Test the page
@@ -438,6 +441,14 @@ In `master-records.html`, test:
 - Manual refresh with **Refresh Data** button
 - Dynamic display of all master records from `GET /api/projects`
 
+In `detail-records.html`, test:
+
+- Initial loading state
+- Error state when backend is not running
+- Manual refresh with **Refresh Data** button
+- Dynamic display of all detail records from `GET /api/tasks`
+- Connected master shown for each detail (project ID and name when available)
+
 If the Flask backend runs on port `5001`, update this line in `frontend-vanilla/script.js` for `index.html`:
 
 ```javascript
@@ -445,4 +456,6 @@ const API_BASE_URL = "http://127.0.0.1:5001";
 ```
 
 For `master-records.html`, no manual port change is needed for localhost ports `5000` through `5005` because `master-records.js` auto-detects the backend using `GET /api/health`.
+
+For `detail-records.html`, no manual port change is needed for localhost ports `5000` through `5005` because `detail-records.js` auto-detects the backend using `GET /api/health`.
 
