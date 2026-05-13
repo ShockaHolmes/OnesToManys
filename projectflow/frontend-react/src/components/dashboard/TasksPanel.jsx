@@ -27,13 +27,14 @@ function TasksPanel({
 
   return (
     <article className={`dashboard-panel ${className}`.trim()}>
-      <h2>All Tasks</h2>
+      <h2>Detail Records (Tasks)</h2>
+      <p className="panel-hint">Create or update detail records and connect each one to a master project.</p>
       <DetailForm
         formData={taskForm}
         projects={projects}
         onChange={updateCreateForm}
         onSubmit={onCreateTask}
-        submitLabel="Add Task"
+        submitLabel="Create Detail Record"
         isSubmitting={isSubmitting}
       />
 

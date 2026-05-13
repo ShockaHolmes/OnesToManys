@@ -48,7 +48,13 @@ function MasterCard({
         <button type="button" onClick={() => onStartEdit(project)} className="muted">
           Edit
         </button>
-        <button type="button" onClick={() => onDelete(projectId)} className="danger" disabled={isSubmitting}>
+        <button
+          type="button"
+          aria-label="Delete master record"
+          onClick={() => onDelete(projectId)}
+          className="danger"
+          disabled={isSubmitting}
+        >
           Delete
         </button>
       </div>

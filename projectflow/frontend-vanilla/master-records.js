@@ -105,11 +105,11 @@ function renderRecords(records) {
 
                     <div class="card-actions">
                         <button class="btn btn-primary select-project-btn" type="button" data-project-id="${projectId}">
-                            ${selectedProjectId === Number(project.project_id) ? 'Selected' : 'Show Related Details'}
+                            ${selectedProjectId === Number(project.project_id) ? 'Viewing Related Details' : 'View Related Details'}
                         </button>
-                        <button class="btn btn-secondary edit-toggle-btn" type="button" data-project-id="${projectId}">Edit</button>
+                        <button class="btn btn-secondary edit-toggle-btn" type="button" data-project-id="${projectId}">Edit Master</button>
                         <form class="inline-form delete-form" data-project-id="${projectId}">
-                            <button class="btn btn-danger" type="submit">Delete</button>
+                            <button class="btn btn-danger" type="submit">Delete Master</button>
                         </form>
                     </div>
 

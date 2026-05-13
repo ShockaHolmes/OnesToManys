@@ -44,7 +44,13 @@ function DetailCard({
         <button type="button" onClick={() => onStartEdit(task)} className="muted">
           Edit
         </button>
-        <button type="button" onClick={() => onDelete(taskId)} className="danger" disabled={isSubmitting}>
+        <button
+          type="button"
+          aria-label="Delete detail record"
+          onClick={() => onDelete(taskId)}
+          className="danger"
+          disabled={isSubmitting}
+        >
           Delete
         </button>
       </div>

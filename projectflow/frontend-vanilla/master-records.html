@@ -192,6 +192,13 @@
             gap: 0.9rem;
         }
 
+        .relationship-layout {
+            display: grid;
+            grid-template-columns: 1.25fr 0.95fr;
+            gap: 1rem;
+            align-items: start;
+        }
+
         .record-card {
             border: 1px solid var(--line);
             border-radius: 12px;
@@ -248,7 +255,20 @@
             border-radius: 12px;
             background: #f9fbff;
             padding: 1rem;
-            margin-top: 1rem;
+            margin-top: 0;
+            position: sticky;
+            top: 1rem;
+        }
+
+        .relationship-note {
+            margin-bottom: 0.6rem;
+            color: #1e40af;
+            font-size: 0.86rem;
+            font-weight: 600;
+            padding: 0.45rem 0.6rem;
+            border-radius: 8px;
+            background: #eaf2ff;
+            border: 1px solid #c7dbff;
         }
 
         .details-panel h2 {
@@ -351,6 +371,14 @@
                 padding: 0.75rem;
             }
 
+            .relationship-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .details-panel {
+                position: static;
+            }
+
             .header,
             .toolbar,
             .content,
@@ -385,6 +413,7 @@
 
             <section class="form-panel">
                 <h2>Add Master Record</h2>
+                <p class="small-note">Create one master project, then select it to view connected detail records.</p>
                 <form id="createForm">
                     <div class="form-grid">
                         <div class="field">
@@ -414,18 +443,21 @@
                     </div>
 
                     <div class="form-actions">
-                        <button id="createSubmitBtn" class="btn btn-primary" type="submit">Create Record</button>
+                        <button id="createSubmitBtn" class="btn btn-primary" type="submit">Create Master Record</button>
                         <span class="small-note">Fields marked with * are required.</span>
                     </div>
                 </form>
             </section>
 
-            <div id="recordsGrid" class="records-grid"></div>
+            <section class="relationship-layout" aria-live="polite">
+                <div id="recordsGrid" class="records-grid"></div>
 
-            <section class="details-panel" aria-live="polite">
-                <h2>Related Detail Records</h2>
-                <p id="detailsSubtitle" class="details-subtitle">Select a master record to load related detail records.</p>
-                <div id="detailsList" class="details-list"></div>
+                <section class="details-panel">
+                    <h2>Related Detail Records</h2>
+                    <p class="relationship-note">One master record can connect to many detail records.</p>
+                    <p id="detailsSubtitle" class="details-subtitle">Select a master record to load related detail records.</p>
+                    <div id="detailsList" class="details-list"></div>
+                </section>
             </section>
         </section>
 

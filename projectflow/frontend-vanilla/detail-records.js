@@ -141,9 +141,9 @@ function renderRecords(tasks, masterNameMap) {
                     ${description}
 
                     <div class="card-actions">
-                        <button class="btn btn-secondary edit-toggle-btn" type="button" data-task-id="${taskId}">Edit</button>
+                        <button class="btn btn-secondary edit-toggle-btn" type="button" data-task-id="${taskId}">Edit Detail</button>
                         <form class="inline-form delete-form" data-task-id="${taskId}">
-                            <button class="btn btn-danger" type="submit">Delete</button>
+                            <button class="btn btn-danger" type="submit">Delete Detail</button>
                         </form>
                     </div>
 

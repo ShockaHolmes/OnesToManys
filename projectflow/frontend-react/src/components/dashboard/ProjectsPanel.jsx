@@ -27,12 +27,13 @@ function ProjectsPanel({
 
   return (
     <article className="dashboard-panel">
-      <h2>Projects</h2>
+      <h2>Master Records (Projects)</h2>
+      <p className="panel-hint">Choose one project to highlight its connected detail records.</p>
       <MasterForm
         formData={projectForm}
         onChange={updateCreateForm}
         onSubmit={onCreateProject}
-        submitLabel="Add Project"
+        submitLabel="Create Master Record"
         isSubmitting={isSubmitting}
       />
 
