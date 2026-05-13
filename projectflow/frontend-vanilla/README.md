@@ -7,8 +7,10 @@ A lightweight, responsive web frontend for ProjectFlow built with pure HTML, CSS
 ```
 frontend-vanilla/
 ├── index.html      # Main HTML page
+├── master-records.html  # Master records (projects) listing page
 ├── styles.css      # Styling (CSS)
 ├── script.js       # Application logic (JavaScript)
+├── master-records.js # Master records page logic
 └── README.md       # This file
 ```
 
@@ -16,7 +18,7 @@ frontend-vanilla/
 
 ### Prerequisites
 
-- **Backend Server Running**: The Flask backend must be running at `http://localhost:5000`
+- **Backend Server Running**: The Flask backend must be running on localhost (master-records auto-detects ports `5000-5005`)
 - **Modern Web Browser**: Chrome, Firefox, Safari, or Edge (ES6 support required)
 - **No installation needed**: This is a static frontend with no build process!
 
@@ -64,6 +66,19 @@ Then open `http://localhost:8080`
 2. 📦 Create a new project using the "+ New Project" button
 3. ✏️ Add tasks to your project with "+ New Task"
 4. 🎯 Manage your tasks by editing or deleting them
+
+### Master Records Page (Phase 3)
+
+Open `master-records.html` to view all master records (projects) from the REST API.
+
+You can also open it from `index.html` using the **View All Master Records** link in the header.
+
+This page includes:
+- Dynamic rendering of records from `GET /api/projects`
+- Loading state while data is being fetched
+- Error state when the API request fails
+- Manual refresh via a "Refresh Data" button
+- Automatic backend detection on `http://localhost:5000` through `http://localhost:5005`
 
 ## 🎯 Features
 
@@ -152,6 +167,12 @@ const API_BASE_URL = 'http://localhost:5000';
 const API_BASE_URL = 'http://your-backend-url:port';
 ```
 
+### Master Records Backend Detection
+
+`master-records.js` automatically checks localhost ports `5000` through `5005` using `GET /api/health` and picks the first reachable backend.
+
+If your backend runs outside that range, edit `API_PORT_CANDIDATES` in `master-records.js`.
+
 ## 🐛 Troubleshooting
 
 ### Backend Connection Error
@@ -161,8 +182,9 @@ const API_BASE_URL = 'http://your-backend-url:port';
 **Solutions**:
 1. Make sure Flask backend is running: `python3 app.py` in the backend directory
 2. Check the port number (default is 5000, but may use 5001, 5002, etc. if 5000 is busy)
-3. Update `API_BASE_URL` in `script.js` if using a different port
-4. Ensure CORS is enabled in Flask (it is by default)
+3. For `master-records.html`, no manual change is needed if backend is on localhost `5000-5005`
+4. For `index.html`, update `API_BASE_URL` in `script.js` if needed
+5. Ensure CORS is enabled in Flask (it is by default)
 
 ### Projects/Tasks Not Loading
 
@@ -235,7 +257,7 @@ const API_BASE_URL = 'http://your-backend-url:port';
 
 ## 📦 What's Included
 
-- ✅ 3 files only (HTML, CSS, JS)
+- ✅ Multiple pages and scripts (`index.html`, `master-records.html`, `script.js`, `master-records.js`, `styles.css`)
 - ✅ No external dependencies
 - ✅ No build process required
 - ✅ ~30KB total file size

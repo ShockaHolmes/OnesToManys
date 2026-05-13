@@ -390,8 +390,10 @@ frontend-vanilla/
 It includes:
 
 - `index.html`
+- `master-records.html`
 - `styles.css`
 - `script.js`
+- `master-records.js`
 
 ### 1. Start the Flask backend
 
@@ -404,7 +406,7 @@ python3 app.py
 The backend should run at:
 
 ```text
-http://127.0.0.1:5000
+http://127.0.0.1:5000 (or next open localhost port)
 ```
 
 ### 2. Start the Vanilla JavaScript frontend
@@ -419,21 +421,28 @@ python3 -m http.server 5500
 ### 3. Open the frontend in the browser
 
 ```text
-http://localhost:5500
+http://localhost:5500/index.html
+http://localhost:5500/master-records.html
 ```
 
 ### 4. Test the page
 
-Click:
+In `index.html`, test:
 
-- Check API Connection
-- Load Projects
-- Load Tasks
-- Load Foster Path Dashboard Tasks
+- Create and load projects/tasks
 
-If the Flask backend runs on port `5001`, update this line in `frontend-vanilla/script.js`:
+In `master-records.html`, test:
+
+- Initial loading state
+- Error state when backend is not running
+- Manual refresh with **Refresh Data** button
+- Dynamic display of all master records from `GET /api/projects`
+
+If the Flask backend runs on port `5001`, update this line in `frontend-vanilla/script.js` for `index.html`:
 
 ```javascript
 const API_BASE_URL = "http://127.0.0.1:5001";
 ```
+
+For `master-records.html`, no manual port change is needed for localhost ports `5000` through `5005` because `master-records.js` auto-detects the backend using `GET /api/health`.
 
