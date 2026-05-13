@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/master/MasterList.jsx</title>
+    <title>Code coverage report for components/detail/DetailList.jsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/master</a> MasterList.jsx</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/detail</a> DetailList.jsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -108,10 +108,7 @@
 <a name='L43'></a><a href='#L43'>43</a>
 <a name='L44'></a><a href='#L44'>44</a>
 <a name='L45'></a><a href='#L45'>45</a>
-<a name='L46'></a><a href='#L46'>46</a>
-<a name='L47'></a><a href='#L47'>47</a>
-<a name='L48'></a><a href='#L48'>48</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L46'></a><a href='#L46'>46</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -156,45 +153,42 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import MasterCard from './MasterCard'
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import DetailCard from './DetailCard'
 &nbsp;
-function MasterList({
+function DetailList({
+  tasks,
   projects,
-  selectedProjectId,
-  editingProjectId,
-  editProjectForm,
+  editingTaskId,
+  editTaskForm,
   isSubmitting,
-  onEditProjectChange,
-  onSelectProject,
-  onBeginEditProject,
-  onSaveEditedProject,
-  onCancelEditProject,
-  onDeleteProject
+  onEditTaskChange,
+  onBeginEditTask,
+  onSaveEditedTask,
+  onCancelEditTask,
+  onDeleteTask
 }) {
-  if (projects.length === 0) {
-    return &lt;p className="dashboard-note"&gt;No projects found.&lt;/p&gt;
+  if (tasks.length === 0) {
+    return &lt;p className="dashboard-note"&gt;No tasks found.&lt;/p&gt;
   }
 &nbsp;
   return (
-    &lt;ul className="item-list"&gt;
-      {projects.map((project) =&gt; {
-        const projectId = Number(project.project_id)
+    &lt;ul className="item-list compact"&gt;
+      {tasks.map((task) =&gt; {
+        const taskId = Number(task.task_id)
 &nbsp;
         return (
-          &lt;li key={project.project_id}&gt;
-            &lt;MasterCard
-              project={project}
-              isSelected={projectId === Number(selectedProjectId)}
-              isEditing={projectId === Number(editingProjectId)}
-              editForm={editProjectForm}
+          &lt;li key={task.task_id} className="task-row"&gt;
+            &lt;DetailCard
+              task={task}
+              projects={projects}
+              isEditing={taskId === Number(editingTaskId)}
+              editForm={editTaskForm}
               isSubmitting={isSubmitting}
-              onEditChange={onEditProjectChange}
-              onSelect={onSelectProject}
-              onStartEdit={onBeginEditProject}
-              onSaveEdit={onSaveEditedProject}
-              onCancelEdit={onCancelEditProject}
-              onDelete={onDeleteProject}
+              onEditChange={onEditTaskChange}
+              onStartEdit={onBeginEditTask}
+              onSaveEdit={onSaveEditedTask}
+              onCancelEdit={onCancelEditTask}
+              onDelete={onDeleteTask}
             /&gt;
           &lt;/li&gt;
         )
@@ -203,7 +197,7 @@ function MasterList({
   )
 }
 &nbsp;
-export default MasterList
+export default DetailList
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
