@@ -73,10 +73,12 @@ Then open `http://localhost:8080`
 
 Open `master-records.html` to view all master records (projects) from the REST API.
 
-You can also open it from `index.html` using the **View All Master Records** link in the header.
+You can also open it from `index.html` using the **Phase 3: One-to-Many Viewer (Master -> Details)** link in the header.
 
 This page includes:
 - Dynamic rendering of records from `GET /api/projects`
+- Select a master record and load related detail records from `GET /api/projects/{id}/tasks`
+- Dynamic detail list updates when another master record is selected
 - Loading state while data is being fetched
 - Error state when the API request fails
 - Manual refresh via a "Refresh Data" button
@@ -161,6 +163,7 @@ PUT    /api/projects/<project_id>       # Update project
 GET    /api/tasks                       # List all tasks
 POST   /api/tasks                       # Create new task
 DELETE /api/tasks/<task_id>             # Delete task
+PUT    /api/tasks/<task_id>             # Update task
 ```
 
 ### Project Tasks
@@ -324,7 +327,7 @@ newProjectBtn.addEventListener('click', () => {
 
 To enhance this frontend:
 
-1. **Add edit functionality**: Implement PUT endpoints
+1. **Add inline filtering and sorting**: Filter and sort projects/tasks by status and priority
 2. **Add filtering**: Filter projects by status
 3. **Add search**: Search projects and tasks
 4. **Add due date indicators**: Show overdue tasks
@@ -335,7 +338,6 @@ To enhance this frontend:
 
 ## ✨ Future Enhancements
 
-- [ ] Edit existing projects and tasks
 - [ ] Filter and search functionality
 - [ ] Local storage for offline support
 - [ ] Dark mode theme

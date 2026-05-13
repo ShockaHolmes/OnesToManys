@@ -1,23 +1,25 @@
+# ProjectFlow
+
 ## Backend Setup Instructions
 
 This project uses Python, Flask, Flask-CORS, and SQLite for the backend REST API.
 
-### 1. Go to the backend folder
+### 1. Go to the backend folder and run the API
 
 ```bash
 cd backend
-
 python3 -m venv .venv
-
 source .venv/bin/activate
-
 python3 -m pip install flask flask-cors
-
 python3 app.py
+```
 
+### 2. Quick backend checks
+
+```bash
 curl http://127.0.0.1:5000/
-
 curl http://127.0.0.1:5000/api/health
+```
 
 ## API Testing
 
@@ -27,27 +29,17 @@ This endpoint returns all master records from the `projects` table.
 
 ```bash
 curl http://127.0.0.1:5000/api/projects
+curl http://127.0.0.1:5000/api/projects | python3 -m json.tool
+```
 
-## API Testing
-
-### Get all projects
-
-This endpoint returns all master records from the `projects` table.
-
-For pretty JSON version:
-```bash
-curl http://127.0.0.1:5000/api/projects
-
-## Get All Tasks
+### Get all tasks
 
 This endpoint returns all detail records from the `tasks` table.
 
 ```bash
 curl http://127.0.0.1:5000/api/tasks
-
-Pretty JSON version:
-
 curl http://127.0.0.1:5000/api/tasks | python3 -m json.tool
+```
 
 ## Project CRUD API Testing
 
@@ -55,13 +47,17 @@ curl http://127.0.0.1:5000/api/tasks | python3 -m json.tool
 
 ```bash
 curl http://127.0.0.1:5000/api/projects | python3 -m json.tool
+```
 
-Get one project
+### Get one project
 
+```bash
 curl http://127.0.0.1:5000/api/projects/1 | python3 -m json.tool
+```
 
-Create a project
+### Create a project
 
+```bash
 curl -X POST http://127.0.0.1:5000/api/projects \
   -H "Content-Type: application/json" \
   -d '{
@@ -71,9 +67,11 @@ curl -X POST http://127.0.0.1:5000/api/projects \
     "start_date": "2026-05-15",
     "due_date": "2026-06-01"
   }' | python3 -m json.tool
+```
 
-Update a project
+### Update a project
 
+```bash
 curl -X PUT http://127.0.0.1:5000/api/projects/2 \
   -H "Content-Type: application/json" \
   -d '{
@@ -83,10 +81,13 @@ curl -X PUT http://127.0.0.1:5000/api/projects/2 \
     "start_date": "2026-05-15",
     "due_date": "2026-06-05"
   }' | python3 -m json.tool
+```
 
-Delete a project
+### Delete a project
 
+```bash
 curl -X DELETE http://127.0.0.1:5000/api/projects/2 | python3 -m json.tool
+```
 
 ## Task CRUD API Testing
 
@@ -183,6 +184,7 @@ curl -X POST http://127.0.0.1:5000/api/tasks \
     "due_date": "2026-06-10"
   }' | python3 -m json.tool
 ```
+
 ## One Project With Its Tasks
 
 This endpoint returns one master record and all detail records connected to it.
@@ -249,6 +251,7 @@ curl -X POST http://127.0.0.1:5000/api/projects/1/tasks \
     "due_date": "2026-06-15"
   }' | python3 -m json.tool
 ```
+
 ## Get One Task Under One Project
 
 This endpoint returns one specific detail record only if it belongs to the selected master record.
@@ -270,6 +273,7 @@ curl http://127.0.0.1:5000/api/projects/999/tasks/1 | python3 -m json.tool
 ```bash
 curl http://127.0.0.1:5000/api/projects/2/tasks/1 | python3 -m json.tool
 ```
+
 ## Curl API Testing
 
 The API was tested using curl from the terminal.
@@ -288,24 +292,7 @@ Example test command:
 
 ```bash
 curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
-## Curl API Testing
-
-The API was tested using curl from the terminal.
-
-Tested endpoint groups:
-
-- Master CRUD endpoints for `projects`
-- Detail CRUD endpoints for `tasks`
-- Nested relationship endpoints for `projects/{id}/tasks`
-
-Saved testing evidence:
-
-- `docs/curl-tests/api-test-results.txt`
-
-Example test command:
-
-```bash
-curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
+```
 
 ## Export Data to JSON
 
@@ -334,6 +321,7 @@ curl http://127.0.0.1:5000/api/export/json | python3 -m json.tool
 ```text
 database/exports/projectflow_export.json
 ```
+
 ## Import Data from JSON
 
 This endpoint reloads saved database data from a JSON export file.
@@ -379,6 +367,7 @@ curl -X POST http://127.0.0.1:5000/api/import/json \
   -H "Content-Type: application/json" \
   -d '{"file_name": "missing_file.json"}' | python3 -m json.tool
 ```
+
 ## Vanilla JavaScript Frontend Setup
 
 The Vanilla JavaScript frontend is located in:
@@ -408,7 +397,7 @@ python3 app.py
 The backend should run at:
 
 ```text
-http://127.0.0.1:5000 (or next open localhost port)
+http://127.0.0.1:5000
 ```
 
 ### 2. Start the Vanilla JavaScript frontend
@@ -428,7 +417,7 @@ http://localhost:8000/master-records.html
 http://localhost:8000/detail-records.html
 ```
 
-### 4. Test the page
+### 4. Test the pages
 
 In `index.html`, test:
 
@@ -440,6 +429,7 @@ In `master-records.html`, test:
 - Error state when backend is not running
 - Manual refresh with **Refresh Data** button
 - Dynamic display of all master records from `GET /api/projects`
+- Dynamic one-to-many viewer using `GET /api/projects/{id}/tasks`
 
 In `detail-records.html`, test:
 
@@ -458,4 +448,3 @@ const API_BASE_URL = "http://127.0.0.1:5001";
 For `master-records.html`, no manual port change is needed for localhost ports `5000` through `5005` because `master-records.js` auto-detects the backend using `GET /api/health`.
 
 For `detail-records.html`, no manual port change is needed for localhost ports `5000` through `5005` because `detail-records.js` auto-detects the backend using `GET /api/health`.
-

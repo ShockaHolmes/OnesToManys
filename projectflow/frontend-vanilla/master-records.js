@@ -2,6 +2,8 @@ const API_PORT_CANDIDATES = [5000, 5001, 5002, 5003, 5004, 5005];
 const MASTER_ENDPOINT = '/api/projects';
 const HEALTH_ENDPOINT = '/api/health';
 let apiBaseUrl = null;
+let currentProjects = [];
+let selectedProjectId = null;
 
 const refreshBtn = document.getElementById('refreshBtn');
 const createForm = document.getElementById('createForm');
@@ -11,6 +13,8 @@ const statusText = document.getElementById('statusText');
 const messageBox = document.getElementById('messageBox');
 const recordsGrid = document.getElementById('recordsGrid');
 const lastUpdated = document.getElementById('lastUpdated');
+const detailsSubtitle = document.getElementById('detailsSubtitle');
+const detailsList = document.getElementById('detailsList');
 
 function setStatus(text) {
     statusText.textContent = text;
@@ -73,6 +77,7 @@ function renderRecords(records) {
     if (!Array.isArray(records) || records.length === 0) {
         recordsGrid.innerHTML = '';
         setMessage('info', 'No master records were returned by the API.');
+        renderSelectedProjectTasks(null);
         return;
     }
 
@@ -91,7 +96,7 @@ function renderRecords(records) {
                 : '<p class="record-desc">No description</p>';
 
             return `
-                <article class="record-card">
+                <article class="record-card ${selectedProjectId === Number(project.project_id) ? 'selected' : ''}">
                     <h2>${projectName}</h2>
                     <p class="record-meta">Project ID: ${projectId}</p>
                     <p class="record-meta">Start: ${startDate} | Due: ${dueDate}</p>
@@ -99,6 +104,9 @@ function renderRecords(records) {
                     ${description}
 
                     <div class="card-actions">
+                        <button class="btn btn-primary select-project-btn" type="button" data-project-id="${projectId}">
+                            ${selectedProjectId === Number(project.project_id) ? 'Selected' : 'Show Related Details'}
+                        </button>
                         <button class="btn btn-secondary edit-toggle-btn" type="button" data-project-id="${projectId}">Edit</button>
                         <form class="inline-form delete-form" data-project-id="${projectId}">
                             <button class="btn btn-danger" type="submit">Delete</button>
@@ -144,6 +152,68 @@ function renderRecords(records) {
         .join('');
 }
 
+function renderSelectedProjectTasks(payload) {
+    if (!payload || !payload.project) {
+        detailsSubtitle.textContent = 'Select a master record to load related detail records.';
+        detailsList.innerHTML = '';
+        return;
+    }
+
+    const projectName = escapeHtml(payload.project.project_name || `Project ${payload.project.project_id}`);
+    const projectId = escapeHtml(payload.project.project_id);
+    const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
+
+    detailsSubtitle.textContent = `Showing details for ${projectName} (ID: ${projectId})`;
+
+    if (tasks.length === 0) {
+        detailsList.innerHTML = '<p class="small-note">No related detail records found for this master record.</p>';
+        return;
+    }
+
+    detailsList.innerHTML = tasks
+        .map((task) => {
+            const title = escapeHtml(task.task_title || 'Untitled Task');
+            const taskId = escapeHtml(task.task_id);
+            const priority = escapeHtml(task.priority || 'Unknown');
+            const status = escapeHtml(task.status || 'Unknown');
+            const dueDate = escapeHtml(task.due_date || 'Not set');
+            const description = task.task_description && String(task.task_description).trim()
+                ? `<p class="detail-desc">${escapeHtml(task.task_description)}</p>`
+                : '<p class="detail-desc">No description</p>';
+
+            return `
+                <article class="detail-item">
+                    <h3>${title}</h3>
+                    <p class="detail-meta">Task ID: ${taskId}</p>
+                    <p class="detail-meta">Priority: ${priority} | Status: ${status} | Due: ${dueDate}</p>
+                    ${description}
+                </article>
+            `;
+        })
+        .join('');
+}
+
+async function loadRelatedDetails(projectId) {
+    if (!apiBaseUrl) {
+        return;
+    }
+
+    selectedProjectId = Number(projectId);
+    renderRecords(currentProjects);
+    detailsSubtitle.textContent = `Loading related detail records for project #${selectedProjectId}...`;
+    detailsList.innerHTML = '';
+
+    try {
+        const payload = await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}/${selectedProjectId}/tasks`);
+        renderSelectedProjectTasks(payload);
+        setStatus(`Loaded related details for project #${selectedProjectId}.`);
+    } catch (error) {
+        renderSelectedProjectTasks(null);
+        detailsSubtitle.textContent = `Unable to load related details for project #${selectedProjectId}.`;
+        detailsList.innerHTML = `<p class="small-note">${escapeHtml(error.message)}</p>`;
+    }
+}
+
 async function fetchMasterRecords() {
     if (!apiBaseUrl) {
         setMessage('error', 'No reachable backend was found. Start the Flask server and refresh.');
@@ -157,6 +227,16 @@ async function fetchMasterRecords() {
 
     try {
         const data = await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}`);
+        currentProjects = Array.isArray(data) ? data : [];
+
+        if (selectedProjectId !== null) {
+            const stillExists = currentProjects.some((project) => Number(project.project_id) === selectedProjectId);
+            if (!stillExists) {
+                selectedProjectId = null;
+                renderSelectedProjectTasks(null);
+            }
+        }
+
         renderRecords(data);
 
         const now = new Date();
@@ -217,6 +297,13 @@ async function handleCreateSubmit(event) {
 }
 
 function handleGridClick(event) {
+    const selectBtn = event.target.closest('.select-project-btn');
+    if (selectBtn) {
+        const projectId = Number(selectBtn.dataset.projectId);
+        loadRelatedDetails(projectId);
+        return;
+    }
+
     const editToggleBtn = event.target.closest('.edit-toggle-btn');
     if (editToggleBtn) {
         const projectId = editToggleBtn.dataset.projectId;
@@ -263,6 +350,12 @@ async function handleGridSubmit(event) {
             await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}/${projectId}`, {
                 method: 'DELETE'
             });
+
+            if (selectedProjectId === Number(projectId)) {
+                selectedProjectId = null;
+                renderSelectedProjectTasks(null);
+            }
+
             await fetchMasterRecords();
             setMessage('info', `Deleted master record #${projectId}.`);
         } catch (error) {
