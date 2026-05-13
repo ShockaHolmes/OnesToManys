@@ -14,7 +14,8 @@ function TasksPanel({
   onBeginEditTask,
   onSaveEditedTask,
   onCancelEditTask,
-  onDeleteTask
+  onDeleteTask,
+  className = ''
 }) {
   function updateCreateForm(field, value) {
     setTaskForm((prev) => ({ ...prev, [field]: value }))
@@ -25,7 +26,7 @@ function TasksPanel({
   }
 
   return (
-    <article className="dashboard-panel">
+    <article className={`dashboard-panel ${className}`.trim()}>
       <h2>All Tasks</h2>
       <DetailForm
         formData={taskForm}

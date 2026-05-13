@@ -177,6 +177,12 @@ function ProjectTaskDashboard() {
         onSelectProject={setSelectedProjectId}
       />
 
+      <RelatedTasksPanel
+        selectedProject={selectedProject}
+        isLoadingRelated={isLoadingRelated}
+        relatedTasks={relatedTasks}
+      />
+
       <TasksPanel
         tasks={tasks}
         projects={projects}
@@ -191,12 +197,7 @@ function ProjectTaskDashboard() {
         onSaveEditedTask={saveEditedTask}
         onCancelEditTask={() => setEditingTaskId(null)}
         onDeleteTask={deleteTask}
-      />
-
-      <RelatedTasksPanel
-        selectedProject={selectedProject}
-        isLoadingRelated={isLoadingRelated}
-        relatedTasks={relatedTasks}
+        className="full-width"
       />
 
       {(notice || error) && (
