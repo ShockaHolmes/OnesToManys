@@ -4,6 +4,8 @@ const HEALTH_ENDPOINT = '/api/health';
 let apiBaseUrl = null;
 
 const refreshBtn = document.getElementById('refreshBtn');
+const createForm = document.getElementById('createForm');
+const createSubmitBtn = document.getElementById('createSubmitBtn');
 const apiPath = document.getElementById('apiPath');
 const statusText = document.getElementById('statusText');
 const messageBox = document.getElementById('messageBox');
@@ -34,6 +36,39 @@ function escapeHtml(value) {
         .replace(/'/g, '&#039;');
 }
 
+function normalizeDateInput(value) {
+    return value && String(value).trim() ? String(value).trim() : '';
+}
+
+function getPayloadFromForm(form) {
+    const formData = new FormData(form);
+
+    return {
+        project_name: String(formData.get('project_name') || '').trim(),
+        status: String(formData.get('status') || '').trim(),
+        description: String(formData.get('description') || '').trim(),
+        start_date: normalizeDateInput(formData.get('start_date')),
+        due_date: normalizeDateInput(formData.get('due_date'))
+    };
+}
+
+async function requestJson(url, options = {}) {
+    const response = await fetch(url, options);
+    const contentType = response.headers.get('content-type') || '';
+    let payload = null;
+
+    if (contentType.includes('application/json')) {
+        payload = await response.json();
+    }
+
+    if (!response.ok) {
+        const backendMessage = payload && (payload.error || payload.message);
+        throw new Error(backendMessage || `Request failed with status ${response.status}`);
+    }
+
+    return payload;
+}
+
 function renderRecords(records) {
     if (!Array.isArray(records) || records.length === 0) {
         recordsGrid.innerHTML = '';
@@ -45,16 +80,64 @@ function renderRecords(records) {
 
     recordsGrid.innerHTML = records
         .map((project) => {
+            const projectId = escapeHtml(project.project_id);
+            const projectName = escapeHtml(project.project_name || 'Untitled Project');
+            const status = escapeHtml(project.status || 'Unknown');
+            const startDate = escapeHtml(project.start_date || 'Not set');
+            const dueDate = escapeHtml(project.due_date || 'Not set');
+            const safeDescription = escapeHtml(project.description || '');
             const description = project.description && String(project.description).trim()
-                ? `<p class="record-desc">${escapeHtml(project.description)}</p>`
+                ? `<p class="record-desc">${safeDescription}</p>`
                 : '<p class="record-desc">No description</p>';
 
             return `
                 <article class="record-card">
-                    <h2>${escapeHtml(project.project_name || 'Untitled Project')}</h2>
-                    <p class="record-meta">Project ID: ${escapeHtml(project.project_id)}</p>
-                    <span class="status-chip">${escapeHtml(project.status || 'Unknown')}</span>
+                    <h2>${projectName}</h2>
+                    <p class="record-meta">Project ID: ${projectId}</p>
+                    <p class="record-meta">Start: ${startDate} | Due: ${dueDate}</p>
+                    <span class="status-chip">${status}</span>
                     ${description}
+
+                    <div class="card-actions">
+                        <button class="btn btn-secondary edit-toggle-btn" type="button" data-project-id="${projectId}">Edit</button>
+                        <form class="inline-form delete-form" data-project-id="${projectId}">
+                            <button class="btn btn-danger" type="submit">Delete</button>
+                        </form>
+                    </div>
+
+                    <form class="edit-form" data-project-id="${projectId}" hidden>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>Project Name *</label>
+                                <input name="project_name" type="text" value="${projectName}" required>
+                            </div>
+
+                            <div class="field">
+                                <label>Status *</label>
+                                <input name="status" type="text" value="${status}" required>
+                            </div>
+
+                            <div class="field">
+                                <label>Start Date</label>
+                                <input name="start_date" type="date" value="${escapeHtml(project.start_date || '')}">
+                            </div>
+
+                            <div class="field">
+                                <label>Due Date</label>
+                                <input name="due_date" type="date" value="${escapeHtml(project.due_date || '')}">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Description</label>
+                            <textarea name="description">${safeDescription}</textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button class="btn btn-primary" type="submit">Save Changes</button>
+                            <button class="btn btn-secondary cancel-edit-btn" type="button" data-project-id="${projectId}">Cancel</button>
+                        </div>
+                    </form>
                 </article>
             `;
         })
@@ -73,13 +156,7 @@ async function fetchMasterRecords() {
     setMessage('info', 'Loading records from the API...');
 
     try {
-        const response = await fetch(`${apiBaseUrl}${MASTER_ENDPOINT}`);
-
-        if (!response.ok) {
-            throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}`);
         renderRecords(data);
 
         const now = new Date();
@@ -92,6 +169,151 @@ async function fetchMasterRecords() {
         setStatus('Error loading master records.');
     } finally {
         refreshBtn.disabled = false;
+    }
+}
+
+function closeAllEditForms() {
+    recordsGrid.querySelectorAll('.edit-form').forEach((form) => {
+        form.hidden = true;
+    });
+}
+
+async function handleCreateSubmit(event) {
+    event.preventDefault();
+
+    if (!apiBaseUrl) {
+        setMessage('error', 'Backend is not available. Start the backend and refresh.');
+        return;
+    }
+
+    const payload = getPayloadFromForm(createForm);
+
+    if (!payload.project_name || !payload.status) {
+        setMessage('error', 'Project name and status are required.');
+        return;
+    }
+
+    createSubmitBtn.disabled = true;
+    setStatus('Creating master record...');
+
+    try {
+        const created = await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        createForm.reset();
+        await fetchMasterRecords();
+        setMessage('info', `Created master record: ${created.project_name}.`);
+    } catch (error) {
+        setMessage('error', `Unable to create record. ${error.message}`);
+        setStatus('Create failed.');
+    } finally {
+        createSubmitBtn.disabled = false;
+    }
+}
+
+function handleGridClick(event) {
+    const editToggleBtn = event.target.closest('.edit-toggle-btn');
+    if (editToggleBtn) {
+        const projectId = editToggleBtn.dataset.projectId;
+        const editForm = recordsGrid.querySelector(`.edit-form[data-project-id="${projectId}"]`);
+
+        if (!editForm) {
+            return;
+        }
+
+        const willShow = editForm.hidden;
+        closeAllEditForms();
+        editForm.hidden = !willShow;
+        return;
+    }
+
+    const cancelBtn = event.target.closest('.cancel-edit-btn');
+    if (cancelBtn) {
+        const projectId = cancelBtn.dataset.projectId;
+        const editForm = recordsGrid.querySelector(`.edit-form[data-project-id="${projectId}"]`);
+        if (editForm) {
+            editForm.hidden = true;
+        }
+    }
+}
+
+async function handleGridSubmit(event) {
+    const deleteForm = event.target.closest('.delete-form');
+    if (deleteForm) {
+        event.preventDefault();
+
+        const projectId = deleteForm.dataset.projectId;
+        if (!window.confirm(`Delete project #${projectId}? This also deletes related tasks.`)) {
+            return;
+        }
+
+        const submitBtn = deleteForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+        }
+
+        setStatus(`Deleting project #${projectId}...`);
+
+        try {
+            await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}/${projectId}`, {
+                method: 'DELETE'
+            });
+            await fetchMasterRecords();
+            setMessage('info', `Deleted master record #${projectId}.`);
+        } catch (error) {
+            setMessage('error', `Unable to delete record #${projectId}. ${error.message}`);
+            setStatus('Delete failed.');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+            }
+        }
+        return;
+    }
+
+    const editForm = event.target.closest('.edit-form');
+    if (editForm) {
+        event.preventDefault();
+
+        const projectId = editForm.dataset.projectId;
+        const payload = getPayloadFromForm(editForm);
+
+        if (!payload.project_name || !payload.status) {
+            setMessage('error', 'Project name and status are required for updates.');
+            return;
+        }
+
+        const saveBtn = editForm.querySelector('button[type="submit"]');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+        }
+
+        setStatus(`Updating project #${projectId}...`);
+
+        try {
+            const updated = await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}/${projectId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            await fetchMasterRecords();
+            setMessage('info', `Updated master record: ${updated.project_name}.`);
+        } catch (error) {
+            setMessage('error', `Unable to update record #${projectId}. ${error.message}`);
+            setStatus('Update failed.');
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+            }
+        }
     }
 }
 
@@ -124,6 +346,9 @@ async function detectBackendUrl() {
 
 async function initializePage() {
     refreshBtn.addEventListener('click', fetchMasterRecords);
+    createForm.addEventListener('submit', handleCreateSubmit);
+    recordsGrid.addEventListener('click', handleGridClick);
+    recordsGrid.addEventListener('submit', handleGridSubmit);
 
     setStatus('Detecting backend...');
     setMessage('info', 'Checking localhost ports for the Flask API...');
