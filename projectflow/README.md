@@ -163,82 +163,339 @@ Open:
 
 - http://localhost:5173
 
-## API Endpoint List
+## API Route Reference
 
-### System
+Base URL:
 
-- GET /: API summary
-- GET /api/health: service and DB health check
+- http://127.0.0.1:5000
 
-### Projects (Master Records)
+### System Routes
 
-- GET /api/projects: list all projects
-- GET /api/projects/{project_id}: get one project
-- POST /api/projects: create project
-- PUT /api/projects/{project_id}: update project
-- DELETE /api/projects/{project_id}: delete project and related tasks
+- GET /: API summary and available route list
+- GET /api/health: backend and database health check
 
-### Tasks (Detail Records)
+### Master Routes (Projects)
 
-- GET /api/tasks: list all tasks
-- GET /api/tasks/{task_id}: get one task
-- POST /api/tasks: create task
-- PUT /api/tasks/{task_id}: update task
-- DELETE /api/tasks/{task_id}: delete task
+#### GET /api/projects
 
-### Nested One-to-Many Routes
+Returns all master records.
 
-- GET /api/projects/{project_id}/tasks: get project and its tasks
-- GET /api/projects/{project_id}/tasks/{task_id}: get one task under one project
-- POST /api/projects/{project_id}/tasks: create task under a specific project
+Example response:
 
-### Data Portability
-
-- GET /api/export/json: export DB data to JSON
-- POST /api/import/json: import DB data from JSON
-
-## Useful API Examples
-
-### Get all projects
-
-```bash
-curl http://127.0.0.1:5000/api/projects | python3 -m json.tool
-```
-
-### Get tasks for one project
-
-```bash
-curl http://127.0.0.1:5000/api/projects/1/tasks | python3 -m json.tool
-```
-
-### Create a project
-
-```bash
-curl -X POST http://127.0.0.1:5000/api/projects \
-  -H "Content-Type: application/json" \
-  -d '{
-    "project_name": "Portfolio Website",
-    "description": "Create a personal portfolio site.",
-    "status": "Not Started",
-    "start_date": "2026-05-15",
-    "due_date": "2026-06-01"
-  }' | python3 -m json.tool
-```
-
-### Create a task
-
-```bash
-curl -X POST http://127.0.0.1:5000/api/tasks \
-  -H "Content-Type: application/json" \
-  -d '{
+```json
+[
+  {
     "project_id": 1,
-    "task_title": "Create risk score system",
-    "task_description": "Build a simple youth risk score flow.",
+    "project_name": "Mentor Support Hub",
+    "description": "Coordinate mentoring workflows",
+    "status": "In Progress",
+    "start_date": "2026-05-15",
+    "due_date": "2026-06-10"
+  }
+]
+```
+
+#### GET /api/projects/{project_id}
+
+Returns one master record.
+
+Example response:
+
+```json
+{
+  "project_id": 1,
+  "project_name": "Mentor Support Hub",
+  "description": "Coordinate mentoring workflows",
+  "status": "In Progress",
+  "start_date": "2026-05-15",
+  "due_date": "2026-06-10"
+}
+```
+
+#### POST /api/projects
+
+Creates one master record.
+
+Example request body:
+
+```json
+{
+  "project_name": "Portfolio Website",
+  "description": "Create a personal portfolio site.",
+  "status": "Not Started",
+  "start_date": "2026-05-15",
+  "due_date": "2026-06-01"
+}
+```
+
+Example response (201):
+
+```json
+{
+  "project_id": 2,
+  "project_name": "Portfolio Website",
+  "description": "Create a personal portfolio site.",
+  "status": "Not Started",
+  "start_date": "2026-05-15",
+  "due_date": "2026-06-01"
+}
+```
+
+#### PUT /api/projects/{project_id}
+
+Updates one master record.
+
+Example request body:
+
+```json
+{
+  "project_name": "Updated Portfolio Website",
+  "description": "Expanded project details",
+  "status": "In Progress",
+  "start_date": "2026-05-15",
+  "due_date": "2026-06-05"
+}
+```
+
+Example response:
+
+```json
+{
+  "project_id": 2,
+  "project_name": "Updated Portfolio Website",
+  "description": "Expanded project details",
+  "status": "In Progress",
+  "start_date": "2026-05-15",
+  "due_date": "2026-06-05"
+}
+```
+
+#### DELETE /api/projects/{project_id}
+
+Deletes one master record and its related detail records.
+
+Example response:
+
+```json
+{
+  "message": "Project and related tasks deleted successfully",
+  "deleted_project_id": 2
+}
+```
+
+### Detail Routes (Tasks)
+
+#### GET /api/tasks
+
+Returns all detail records.
+
+Example response:
+
+```json
+[
+  {
+    "task_id": 1,
+    "project_id": 1,
+    "task_title": "Schedule onboarding",
+    "task_description": "Prepare mentor onboarding schedule",
     "priority": "High",
     "status": "Not Started",
     "due_date": "2026-06-01"
-  }' | python3 -m json.tool
+  }
+]
 ```
+
+#### GET /api/tasks/{task_id}
+
+Returns one detail record.
+
+Example response:
+
+```json
+{
+  "task_id": 1,
+  "project_id": 1,
+  "task_title": "Schedule onboarding",
+  "task_description": "Prepare mentor onboarding schedule",
+  "priority": "High",
+  "status": "Not Started",
+  "due_date": "2026-06-01"
+}
+```
+
+#### POST /api/tasks
+
+Creates one detail record.
+
+Example request body:
+
+```json
+{
+  "project_id": 1,
+  "task_title": "Create risk score system",
+  "task_description": "Build a simple youth risk score flow.",
+  "priority": "High",
+  "status": "Not Started",
+  "due_date": "2026-06-01"
+}
+```
+
+Example response (201):
+
+```json
+{
+  "task_id": 4,
+  "project_id": 1,
+  "task_title": "Create risk score system",
+  "task_description": "Build a simple youth risk score flow.",
+  "priority": "High",
+  "status": "Not Started",
+  "due_date": "2026-06-01"
+}
+```
+
+#### PUT /api/tasks/{task_id}
+
+Updates one detail record.
+
+Example request body:
+
+```json
+{
+  "project_id": 1,
+  "task_title": "Create youth risk score system",
+  "task_description": "Update scoring inputs",
+  "priority": "High",
+  "status": "In Progress",
+  "due_date": "2026-06-03"
+}
+```
+
+Example response:
+
+```json
+{
+  "task_id": 4,
+  "project_id": 1,
+  "task_title": "Create youth risk score system",
+  "task_description": "Update scoring inputs",
+  "priority": "High",
+  "status": "In Progress",
+  "due_date": "2026-06-03"
+}
+```
+
+#### DELETE /api/tasks/{task_id}
+
+Deletes one detail record.
+
+Example response:
+
+```json
+{
+  "message": "Task deleted successfully",
+  "deleted_task_id": 4
+}
+```
+
+### Nested Relationship Routes (One-to-Many)
+
+#### GET /api/projects/{project_id}/tasks
+
+Returns one master record plus all connected detail records.
+
+Example response:
+
+```json
+{
+  "project": {
+    "project_id": 1,
+    "project_name": "Mentor Support Hub",
+    "description": "Coordinate mentoring workflows",
+    "status": "In Progress",
+    "start_date": "2026-05-15",
+    "due_date": "2026-06-10"
+  },
+  "tasks": [
+    {
+      "task_id": 1,
+      "project_id": 1,
+      "task_title": "Schedule onboarding",
+      "task_description": "Prepare mentor onboarding schedule",
+      "priority": "High",
+      "status": "Not Started",
+      "due_date": "2026-06-01"
+    }
+  ]
+}
+```
+
+#### GET /api/projects/{project_id}/tasks/{task_id}
+
+Returns one specific detail record under one specific master record.
+
+Example response:
+
+```json
+{
+  "project": {
+    "project_id": 1,
+    "project_name": "Mentor Support Hub",
+    "description": "Coordinate mentoring workflows",
+    "status": "In Progress",
+    "start_date": "2026-05-15",
+    "due_date": "2026-06-10"
+  },
+  "task": {
+    "task_id": 1,
+    "project_id": 1,
+    "task_title": "Schedule onboarding",
+    "task_description": "Prepare mentor onboarding schedule",
+    "priority": "High",
+    "status": "Not Started",
+    "due_date": "2026-06-01"
+  }
+}
+```
+
+#### POST /api/projects/{project_id}/tasks
+
+Creates a detail record directly under the selected master record.
+
+Example request body:
+
+```json
+{
+  "task_title": "Create resource recommendation logic",
+  "task_description": "Recommend support resources for youth",
+  "priority": "High",
+  "status": "Not Started",
+  "due_date": "2026-06-08"
+}
+```
+
+Example response (201):
+
+```json
+{
+  "message": "Task created successfully under project",
+  "project_id": 1,
+  "task": {
+    "task_id": 9,
+    "project_id": 1,
+    "task_title": "Create resource recommendation logic",
+    "task_description": "Recommend support resources for youth",
+    "priority": "High",
+    "status": "Not Started",
+    "due_date": "2026-06-08"
+  }
+}
+```
+
+### Data Import and Export Routes
+
+- GET /api/export/json
+- POST /api/import/json
 
 ## Frontend Testing Checklist
 
