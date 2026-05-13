@@ -1,5 +1,11 @@
 # OnesToManys (ListDetails)
 
+## Grading and Presentation Quick Links
+
+Use the ProjectFlow README for final run instructions, demo steps, screenshots, and API documentation:
+
+- projectflow/README.md
+
 The point of this project is to explore what a 3-tier web application is like.
 You can implment it in either Java (and Java frameworks) or Python (and Python frameworks).
 

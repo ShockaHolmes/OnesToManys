@@ -43,6 +43,95 @@ python3 -m http.server 8000
 - API health: http://127.0.0.1:5000/api/health
 - Vanilla master view (optional): http://localhost:8000/master-records.html
 
+## Demo Instructions (Presentation Script)
+
+Use this exact order during grading or demo to keep the flow clear and fast.
+
+1. Reset database:
+
+```bash
+rm -f database/projectflow.db
+sqlite3 database/projectflow.db < database/schema.sql
+sqlite3 database/projectflow.db < database/seed.sql
+```
+
+2. Start backend:
+
+```bash
+cd backend
+source .venv/bin/activate
+python3 app.py
+```
+
+3. Show backend health and API:
+
+```bash
+curl http://127.0.0.1:5000/api/health
+curl http://127.0.0.1:5000/api/projects
+curl http://127.0.0.1:5000/api/tasks
+curl http://127.0.0.1:5000/api/projects/1/tasks
+```
+
+4. In a second terminal, start React:
+
+```bash
+cd frontend-react
+npm run dev
+```
+
+5. In a third terminal, start Vanilla:
+
+```bash
+cd frontend-vanilla
+python3 -m http.server 8000
+```
+
+6. Demo UI behavior:
+
+- React: create/select a project, then show related tasks in master-detail panel.
+- Vanilla: open master-records page and click View Related Details.
+- Optional: open detail-records page to show task-to-project connection.
+
+## Screenshots
+
+Use this screenshot in your submission or slide deck if screenshots are required:
+
+- React dashboard: docs/screenshots/react-dashboard.png
+
+## Fresh Clone Verification
+
+The following command sequence should work from a fresh clone on macOS/Linux:
+
+```bash
+git clone https://github.com/ShockaHolmes/OnesToManys.git
+cd OnesToManys/projectflow
+
+rm -f database/projectflow.db
+sqlite3 database/projectflow.db < database/schema.sql
+sqlite3 database/projectflow.db < database/seed.sql
+
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install flask flask-cors
+python3 app.py
+
+# New terminal
+cd OnesToManys/projectflow/frontend-react
+npm install
+npm run dev
+
+# New terminal (optional for Vanilla)
+cd OnesToManys/projectflow/frontend-vanilla
+python3 -m http.server 8000
+```
+
+Expected:
+
+- Backend health endpoint returns ok.
+- React app loads and displays projects/tasks.
+- Vanilla pages load and fetch API data.
+
 ## Project Purpose
 
 ProjectFlow is a one-to-many project tracking app.
