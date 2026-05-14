@@ -4,6 +4,27 @@
 
 Run these from the projectflow folder.
 
+### One-Click Start (macOS)
+
+You can start both backend and vanilla frontend together with one click:
+
+1. Double-click `Start-ProjectFlow.command` in Finder.
+
+This launcher will:
+- Start backend on `http://127.0.0.1:5000`
+- Start vanilla frontend on `http://localhost:8000`
+- Open both URLs in your browser
+
+If macOS blocks the file on first run, right-click it and choose Open.
+
+### One-Click Stop (macOS)
+
+To stop both services, double-click `Stop-ProjectFlow.command` in Finder.
+
+This will stop:
+- Backend on `127.0.0.1:5000`
+- Frontend on `localhost:8000`
+
 1. Create and seed the database:
 
 ```bash
@@ -97,6 +118,12 @@ python3 -m http.server 8000
 Use this screenshot in your submission or slide deck if screenshots are required:
 
 - React dashboard: docs/screenshots/react-dashboard.png
+
+## Demo Data Reference
+
+Use this ready-to-demo sample dataset for Foster Path presentation inputs:
+
+- docs/foster-path-demo-data.md
 
 ## Fresh Clone Verification
 

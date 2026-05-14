@@ -245,9 +245,63 @@
 
         .card-actions {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 0.5rem;
             margin-top: 0.8rem;
+        }
+
+        .project-details-block {
+            border-top: 1px solid var(--line);
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+        }
+
+        .project-details-heading {
+            color: #1e40af;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-details-list {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .detail-select-btn {
+            width: 100%;
+            text-align: left;
+            border: 1px solid #dbe3ef;
+            border-radius: 8px;
+            background: #f8fbff;
+            color: #1f2937;
+            padding: 0.55rem 0.65rem;
+            cursor: pointer;
+        }
+
+        .detail-select-btn:hover {
+            background: #eef5ff;
+            border-color: #bfdbfe;
+        }
+
+        .detail-select-btn.active {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+            background: #eaf2ff;
+        }
+
+        .detail-select-title {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .detail-select-meta {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--muted);
         }
 
         .details-panel {
@@ -455,7 +509,7 @@
                 <section class="details-panel">
                     <h2>Related Detail Records</h2>
                     <p class="relationship-note">One master record can connect to many detail records.</p>
-                    <p id="detailsSubtitle" class="details-subtitle">Select a master record to load related detail records.</p>
+                    <p id="detailsSubtitle" class="details-subtitle">Expand a master and click a detail to select it.</p>
                     <div id="detailsList" class="details-list"></div>
                 </section>
             </section>

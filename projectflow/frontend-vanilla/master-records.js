@@ -1,9 +1,13 @@
 const API_PORT_CANDIDATES = [5000, 5001, 5002, 5003, 5004, 5005];
 const MASTER_ENDPOINT = '/api/projects';
+const DETAIL_ENDPOINT = '/api/tasks';
 const HEALTH_ENDPOINT = '/api/health';
 let apiBaseUrl = null;
 let currentProjects = [];
+let currentTasks = [];
 let selectedProjectId = null;
+let selectedTaskId = null;
+let expandedProjectIds = new Set();
 
 const refreshBtn = document.getElementById('refreshBtn');
 const createForm = document.getElementById('createForm');
@@ -77,23 +81,53 @@ function renderRecords(records) {
     if (!Array.isArray(records) || records.length === 0) {
         recordsGrid.innerHTML = '';
         setMessage('info', 'No master records were returned by the API.');
-        renderSelectedProjectTasks(null);
+        renderSelectedDetailTask(null, null);
         return;
     }
 
     setMessage('', '');
 
+    const tasksByProjectId = buildTasksByProjectMap(currentTasks);
+
     recordsGrid.innerHTML = records
         .map((project) => {
+            const rawProjectId = Number(project.project_id);
             const projectId = escapeHtml(project.project_id);
             const projectName = escapeHtml(project.project_name || 'Untitled Project');
             const status = escapeHtml(project.status || 'Unknown');
             const startDate = escapeHtml(project.start_date || 'Not set');
             const dueDate = escapeHtml(project.due_date || 'Not set');
             const safeDescription = escapeHtml(project.description || '');
+            const relatedTasks = tasksByProjectId.get(rawProjectId) || [];
+            const detailsCount = relatedTasks.length;
+            const isExpanded = expandedProjectIds.has(rawProjectId);
             const description = project.description && String(project.description).trim()
                 ? `<p class="record-desc">${safeDescription}</p>`
                 : '<p class="record-desc">No description</p>';
+
+            const relatedTaskMarkup = detailsCount
+                ? relatedTasks
+                    .map((task) => {
+                        const taskId = Number(task.task_id);
+                        const isTaskSelected = selectedTaskId === taskId;
+                        const taskTitle = escapeHtml(task.task_title || `Task ${taskId}`);
+                        const taskPriority = escapeHtml(task.priority || 'Unknown');
+                        const taskStatus = escapeHtml(task.status || 'Unknown');
+
+                        return `
+                            <button
+                                class="detail-select-btn ${isTaskSelected ? 'active' : ''}"
+                                type="button"
+                                data-project-id="${projectId}"
+                                data-task-id="${escapeHtml(task.task_id)}"
+                            >
+                                <span class="detail-select-title">${taskTitle}</span>
+                                <span class="detail-select-meta">Priority: ${taskPriority} | Status: ${taskStatus}</span>
+                            </button>
+                        `;
+                    })
+                    .join('')
+                : '<p class="small-note">No detail records under this master yet.</p>';
 
             return `
                 <article class="record-card ${selectedProjectId === Number(project.project_id) ? 'selected' : ''}">
@@ -104,14 +138,21 @@ function renderRecords(records) {
                     ${description}
 
                     <div class="card-actions">
-                        <button class="btn btn-primary select-project-btn" type="button" data-project-id="${projectId}">
-                            ${selectedProjectId === Number(project.project_id) ? 'Viewing Related Details' : 'View Related Details'}
+                        <button class="btn btn-primary select-project-btn" type="button" data-project-id="${projectId}" aria-expanded="${isExpanded ? 'true' : 'false'}">
+                            ${isExpanded ? `Hide Details (${detailsCount})` : `Show Details (${detailsCount})`}
                         </button>
                         <button class="btn btn-secondary edit-toggle-btn" type="button" data-project-id="${projectId}">Edit Master</button>
                         <form class="inline-form delete-form" data-project-id="${projectId}">
                             <button class="btn btn-danger" type="submit">Delete Master</button>
                         </form>
                     </div>
+
+                    <section class="project-details-block" ${isExpanded ? '' : 'hidden'}>
+                        <p class="project-details-heading">Detail records under this master</p>
+                        <div class="project-details-list">
+                            ${relatedTaskMarkup}
+                        </div>
+                    </section>
 
                     <form class="edit-form" data-project-id="${projectId}" hidden>
                         <div class="form-grid">
@@ -152,66 +193,83 @@ function renderRecords(records) {
         .join('');
 }
 
-function renderSelectedProjectTasks(payload) {
-    if (!payload || !payload.project) {
-        detailsSubtitle.textContent = 'Select a master record to load related detail records.';
+function buildTasksByProjectMap(tasks) {
+    const taskMap = new Map();
+
+    if (!Array.isArray(tasks)) {
+        return taskMap;
+    }
+
+    for (const task of tasks) {
+        const projectId = Number(task.project_id);
+
+        if (!Number.isFinite(projectId)) {
+            continue;
+        }
+
+        if (!taskMap.has(projectId)) {
+            taskMap.set(projectId, []);
+        }
+
+        taskMap.get(projectId).push(task);
+    }
+
+    return taskMap;
+}
+
+function renderSelectedDetailTask(task, project) {
+    if (!task || !project) {
+        detailsSubtitle.textContent = 'Expand a master and click a detail to select it.';
         detailsList.innerHTML = '';
         return;
     }
 
-    const projectName = escapeHtml(payload.project.project_name || `Project ${payload.project.project_id}`);
-    const projectId = escapeHtml(payload.project.project_id);
-    const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
+    const projectName = escapeHtml(project.project_name || `Project ${project.project_id}`);
+    const projectId = escapeHtml(project.project_id);
+    const title = escapeHtml(task.task_title || 'Untitled Task');
+    const taskId = escapeHtml(task.task_id);
+    const priority = escapeHtml(task.priority || 'Unknown');
+    const status = escapeHtml(task.status || 'Unknown');
+    const dueDate = escapeHtml(task.due_date || 'Not set');
+    const description = task.task_description && String(task.task_description).trim()
+        ? `<p class="detail-desc">${escapeHtml(task.task_description)}</p>`
+        : '<p class="detail-desc">No description</p>';
 
-    detailsSubtitle.textContent = `Showing details for ${projectName} (ID: ${projectId})`;
+    detailsSubtitle.textContent = `Selected detail from ${projectName} (ID: ${projectId})`;
 
-    if (tasks.length === 0) {
-        detailsList.innerHTML = '<p class="small-note">No related detail records found for this master record.</p>';
-        return;
-    }
-
-    detailsList.innerHTML = tasks
-        .map((task) => {
-            const title = escapeHtml(task.task_title || 'Untitled Task');
-            const taskId = escapeHtml(task.task_id);
-            const priority = escapeHtml(task.priority || 'Unknown');
-            const status = escapeHtml(task.status || 'Unknown');
-            const dueDate = escapeHtml(task.due_date || 'Not set');
-            const description = task.task_description && String(task.task_description).trim()
-                ? `<p class="detail-desc">${escapeHtml(task.task_description)}</p>`
-                : '<p class="detail-desc">No description</p>';
-
-            return `
-                <article class="detail-item">
-                    <h3>${title}</h3>
-                    <p class="detail-meta">Task ID: ${taskId}</p>
-                    <p class="detail-meta">Priority: ${priority} | Status: ${status} | Due: ${dueDate}</p>
-                    ${description}
-                </article>
-            `;
-        })
-        .join('');
+    detailsList.innerHTML = `
+        <article class="detail-item">
+            <h3>${title}</h3>
+            <p class="detail-meta">Task ID: ${taskId}</p>
+            <p class="detail-meta">Priority: ${priority} | Status: ${status} | Due: ${dueDate}</p>
+            ${description}
+        </article>
+    `;
 }
 
-async function loadRelatedDetails(projectId) {
-    if (!apiBaseUrl) {
+function findProjectById(projectId) {
+    return currentProjects.find((project) => Number(project.project_id) === Number(projectId)) || null;
+}
+
+function findTaskById(taskId) {
+    return currentTasks.find((task) => Number(task.task_id) === Number(taskId)) || null;
+}
+
+function toggleProjectDetails(projectId) {
+    const numericProjectId = Number(projectId);
+
+    if (!Number.isFinite(numericProjectId)) {
         return;
     }
 
-    selectedProjectId = Number(projectId);
-    renderRecords(currentProjects);
-    detailsSubtitle.textContent = `Loading related detail records for project #${selectedProjectId}...`;
-    detailsList.innerHTML = '';
-
-    try {
-        const payload = await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}/${selectedProjectId}/tasks`);
-        renderSelectedProjectTasks(payload);
-        setStatus(`Loaded related details for project #${selectedProjectId}.`);
-    } catch (error) {
-        renderSelectedProjectTasks(null);
-        detailsSubtitle.textContent = `Unable to load related details for project #${selectedProjectId}.`;
-        detailsList.innerHTML = `<p class="small-note">${escapeHtml(error.message)}</p>`;
+    if (expandedProjectIds.has(numericProjectId)) {
+        expandedProjectIds.delete(numericProjectId);
+    } else {
+        expandedProjectIds = new Set([numericProjectId]);
     }
+
+    selectedProjectId = numericProjectId;
+    renderRecords(currentProjects);
 }
 
 async function fetchMasterRecords() {
@@ -223,25 +281,49 @@ async function fetchMasterRecords() {
 
     refreshBtn.disabled = true;
     setStatus('Loading master records...');
-    setMessage('info', 'Loading records from the API...');
+    setMessage('info', 'Loading master and detail records from the API...');
 
     try {
-        const data = await requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}`);
-        currentProjects = Array.isArray(data) ? data : [];
+        const [projects, tasks] = await Promise.all([
+            requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}`),
+            requestJson(`${apiBaseUrl}${DETAIL_ENDPOINT}`).catch(() => [])
+        ]);
+
+        currentProjects = Array.isArray(projects) ? projects : [];
+        currentTasks = Array.isArray(tasks) ? tasks : [];
+
+        expandedProjectIds = new Set(
+            [...expandedProjectIds].filter((projectId) =>
+                currentProjects.some((project) => Number(project.project_id) === projectId)
+            )
+        );
 
         if (selectedProjectId !== null) {
             const stillExists = currentProjects.some((project) => Number(project.project_id) === selectedProjectId);
             if (!stillExists) {
                 selectedProjectId = null;
-                renderSelectedProjectTasks(null);
             }
         }
 
-        renderRecords(data);
+        if (selectedTaskId !== null) {
+            const selectedTask = findTaskById(selectedTaskId);
+            const selectedTaskProject = selectedTask ? findProjectById(selectedTask.project_id) : null;
+
+            if (!selectedTask || !selectedTaskProject) {
+                selectedTaskId = null;
+                renderSelectedDetailTask(null, null);
+            } else {
+                renderSelectedDetailTask(selectedTask, selectedTaskProject);
+            }
+        } else {
+            renderSelectedDetailTask(null, null);
+        }
+
+        renderRecords(currentProjects);
 
         const now = new Date();
         lastUpdated.textContent = now.toLocaleString();
-        setStatus(`Loaded ${Array.isArray(data) ? data.length : 0} master records.`);
+        setStatus(`Loaded ${currentProjects.length} master records and ${currentTasks.length} detail records.`);
     } catch (error) {
         console.error('Failed to fetch master records:', error);
         recordsGrid.innerHTML = '';
@@ -300,7 +382,28 @@ function handleGridClick(event) {
     const selectBtn = event.target.closest('.select-project-btn');
     if (selectBtn) {
         const projectId = Number(selectBtn.dataset.projectId);
-        loadRelatedDetails(projectId);
+        toggleProjectDetails(projectId);
+        setStatus(`Toggled detail list for project #${projectId}.`);
+        return;
+    }
+
+    const detailSelectBtn = event.target.closest('.detail-select-btn');
+    if (detailSelectBtn) {
+        const projectId = Number(detailSelectBtn.dataset.projectId);
+        const taskId = Number(detailSelectBtn.dataset.taskId);
+        const selectedProject = findProjectById(projectId);
+        const selectedTask = findTaskById(taskId);
+
+        if (!selectedProject || !selectedTask) {
+            return;
+        }
+
+        selectedProjectId = projectId;
+        selectedTaskId = taskId;
+        expandedProjectIds = new Set([projectId]);
+        renderSelectedDetailTask(selectedTask, selectedProject);
+        renderRecords(currentProjects);
+        setStatus(`Selected detail #${taskId} for project #${projectId}.`);
         return;
     }
 
@@ -353,7 +456,9 @@ async function handleGridSubmit(event) {
 
             if (selectedProjectId === Number(projectId)) {
                 selectedProjectId = null;
-                renderSelectedProjectTasks(null);
+                selectedTaskId = null;
+                expandedProjectIds.delete(Number(projectId));
+                renderSelectedDetailTask(null, null);
             }
 
             await fetchMasterRecords();

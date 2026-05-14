@@ -18,6 +18,20 @@ frontend-vanilla/
 
 ## 🚀 Getting Started
 
+### One-Click Start (macOS)
+
+From the `projectflow` folder, double-click `Start-ProjectFlow.command`.
+
+It will launch both services together and open:
+- `http://127.0.0.1:5000/api/health` (backend)
+- `http://localhost:8000/index.html` (frontend)
+
+If macOS warns the first time, right-click `Start-ProjectFlow.command` and choose **Open**.
+
+### One-Click Stop (macOS)
+
+From the `projectflow` folder, double-click `Stop-ProjectFlow.command` to stop both backend and frontend services.
+
 ### Prerequisites
 
 - **Backend Server Running**: The Flask backend must be running on localhost (master-records auto-detects ports `5000-5005`)

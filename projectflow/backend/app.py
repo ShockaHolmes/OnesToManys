@@ -37,6 +37,31 @@ def get_db_connection():
     return conn
 
 
+def table_exists(conn, table_name):
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,)
+    ).fetchone()
+    return row is not None
+
+
+def aggregate_counts(conn, table_name, column_name):
+    rows = conn.execute(
+        f"""
+        SELECT {column_name} AS label, COUNT(*) AS count
+        FROM {table_name}
+        GROUP BY {column_name}
+        ORDER BY count DESC, label ASC
+        """
+    ).fetchall()
+
+    return {
+        str(row["label"]): int(row["count"])
+        for row in rows
+        if row["label"] is not None and str(row["label"]).strip() != ""
+    }
+
+
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
@@ -60,7 +85,11 @@ def home():
 
             "GET /api/projects/<project_id>/tasks",
             "GET /api/projects/<project_id>/tasks/<task_id>",
-            "POST /api/projects/<project_id>/tasks"
+            "POST /api/projects/<project_id>/tasks",
+
+            "GET /api/youth",
+            "GET /api/dashboard/charts",
+
             "GET /api/export/json",
             "POST /api/import/json",
         ]
@@ -511,6 +540,66 @@ def get_tasks_by_project(project_id):
         "project": dict(project),
         "tasks": [dict(task) for task in tasks]
     })
+
+
+@app.route("/api/youth", methods=["GET"])
+def get_youth_records():
+    conn = get_db_connection()
+
+    if not table_exists(conn, "foster_youth"):
+        conn.close()
+        return jsonify({
+            "error": "foster_youth table not found",
+            "hint": "Rebuild database using database/schema.sql and database/seed.sql"
+        }), 404
+
+    youth_rows = conn.execute(
+        "SELECT * FROM foster_youth ORDER BY youth_id"
+    ).fetchall()
+
+    if table_exists(conn, "youth_support_needs"):
+        need_rows = conn.execute(
+            "SELECT youth_id, support_need FROM youth_support_needs ORDER BY need_id"
+        ).fetchall()
+    else:
+        need_rows = []
+
+    conn.close()
+
+    support_by_youth_id = {}
+    for row in need_rows:
+        youth_id = int(row["youth_id"])
+        support_by_youth_id.setdefault(youth_id, []).append(row["support_need"])
+
+    payload = []
+    for youth in youth_rows:
+        youth_dict = dict(youth)
+        youth_dict["support_needs"] = support_by_youth_id.get(int(youth["youth_id"]), [])
+        payload.append(youth_dict)
+
+    return jsonify(payload)
+
+
+@app.route("/api/dashboard/charts", methods=["GET"])
+def get_dashboard_charts_data():
+    conn = get_db_connection()
+
+    charts = {
+        "task_status": aggregate_counts(conn, "tasks", "status"),
+        "task_priority": aggregate_counts(conn, "tasks", "priority"),
+        "support_needs": {},
+        "risk_levels": {}
+    }
+
+    if table_exists(conn, "youth_support_needs"):
+        charts["support_needs"] = aggregate_counts(conn, "youth_support_needs", "support_need")
+
+    if table_exists(conn, "foster_youth"):
+        charts["risk_levels"] = aggregate_counts(conn, "foster_youth", "risk_level")
+
+    conn.close()
+
+    return jsonify(charts)
 
 @app.route("/api/projects/<int:project_id>/tasks/<int:task_id>", methods=["GET"])
 def get_one_task_for_project(project_id, task_id):

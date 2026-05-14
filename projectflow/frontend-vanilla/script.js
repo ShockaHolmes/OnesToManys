@@ -26,6 +26,16 @@ const toast = document.getElementById('toast');
 /**
  * Make API requests with error handling
  */
+
+const loadChartsBtn = document.getElementById("load-charts-btn");
+
+let taskStatusChart = null;
+let taskPriorityChart = null;
+let supportNeedsChart = null;
+let riskLevelChart = null;
+
+loadChartsBtn.addEventListener("click", loadDashboardCharts);
+
 async function apiCall(endpoint, options = {}) {
     try {
         const url = `${API_BASE_URL}${endpoint}`;
@@ -434,3 +444,187 @@ async function initializeApp() {
 
 // Start the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializeApp);
+
+async function loadDashboardCharts() {
+    try {
+        const chartData = await apiCall('/api/dashboard/charts');
+
+        createTaskStatusChart(chartData.task_status || {});
+        createTaskPriorityChart(chartData.task_priority || {});
+        createSupportNeedsChart(chartData.support_needs || {});
+        createRiskLevelChart(chartData.risk_levels || {});
+
+    } catch (error) {
+        alert(`Chart loading failed: ${error.message}`);
+    }
+}
+
+function createTaskStatusChart(statusCounts) {
+    const labels = Object.keys(statusCounts);
+    const data = Object.values(statusCounts);
+
+    const ctx = document.getElementById("task-status-chart");
+
+    if (taskStatusChart) {
+        taskStatusChart.destroy();
+    }
+
+    taskStatusChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Number of Tasks",
+                    data: data
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: "Tasks by Status"
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createTaskPriorityChart(priorityCounts) {
+    const labels = Object.keys(priorityCounts);
+    const data = Object.values(priorityCounts);
+
+    const ctx = document.getElementById("task-priority-chart");
+
+    if (taskPriorityChart) {
+        taskPriorityChart.destroy();
+    }
+
+    taskPriorityChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Task Priority",
+                    data: data
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: "Tasks by Priority"
+                }
+            }
+        }
+    });
+}
+
+function createSupportNeedsChart(supportNeedsCounts) {
+    const labels = Object.keys(supportNeedsCounts);
+    const data = Object.values(supportNeedsCounts);
+
+    const ctx = document.getElementById("support-needs-chart");
+
+    if (supportNeedsChart) {
+        supportNeedsChart.destroy();
+    }
+
+    supportNeedsChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Youth Count",
+                    data: data
+                }
+            ]
+        },
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: "Sample Youth Support Needs"
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createRiskLevelChart(riskLevelCounts) {
+    const labels = Object.keys(riskLevelCounts);
+    const data = Object.values(riskLevelCounts);
+    const backgroundColor = labels.map((label) => {
+        const normalized = String(label).toLowerCase();
+
+        if (normalized === "high") {
+            return "#ef4444";
+        }
+        if (normalized === "medium") {
+            return "#f59e0b";
+        }
+        if (normalized === "low") {
+            return "#10b981";
+        }
+        return "#3b82f6";
+    });
+
+    const ctx = document.getElementById("risk-level-chart");
+
+    if (riskLevelChart) {
+        riskLevelChart.destroy();
+    }
+
+    riskLevelChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Youth Risk Levels",
+                    data: data,
+                    backgroundColor: backgroundColor
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: "Youth Risk Levels"
+                }
+            }
+        }
+    });
+}

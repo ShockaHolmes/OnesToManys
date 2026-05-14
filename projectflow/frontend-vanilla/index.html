@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProjectFlow - Project & Task Management</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -46,6 +47,37 @@
                             <option value="Completed">Completed</option>
                         </select>
                     </div>
+<section class="panel">
+    <h2>Foster Path Dashboard Charts</h2>
+    <p class="section-intro">
+        These charts show task progress, task priority, and sample youth support needs for the Foster Path Dashboard project.
+    </p>
+
+    <button id="load-charts-btn">Load Dashboard Charts</button>
+
+    <div class="chart-grid">
+        <div class="chart-card">
+            <h3>Task Status Breakdown</h3>
+            <canvas id="task-status-chart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3>Task Priority Breakdown</h3>
+            <canvas id="task-priority-chart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3>Sample Youth Support Needs</h3>
+            <canvas id="support-needs-chart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3>Youth Risk Level Breakdown</h3>
+            <canvas id="risk-level-chart"></canvas>
+        </div>
+    </div>
+</section>
+
                     <div class="form-actions">
                         <button type="submit" class="btn btn-success">Create Project</button>
                         <button type="button" class="btn btn-cancel" id="cancelProjectBtn">Cancel</button>
