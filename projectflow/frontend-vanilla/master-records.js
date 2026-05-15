@@ -10,6 +10,7 @@ let selectedTaskId = null;
 let expandedProjectIds = new Set();
 
 const refreshBtn = document.getElementById('refreshBtn');
+const toggleAllBtn = document.getElementById('toggleAllBtn');
 const createForm = document.getElementById('createForm');
 const createSubmitBtn = document.getElementById('createSubmitBtn');
 const apiPath = document.getElementById('apiPath');
@@ -82,6 +83,7 @@ function renderRecords(records) {
         recordsGrid.innerHTML = '';
         setMessage('info', 'No master records were returned by the API.');
         renderSelectedDetailTask(null, null);
+        updateMasterToggleButton();
         return;
     }
 
@@ -199,6 +201,44 @@ function renderRecords(records) {
             `;
         })
         .join('');
+
+    updateMasterToggleButton();
+}
+
+function areAllProjectsExpanded() {
+    if (!Array.isArray(currentProjects) || currentProjects.length === 0) {
+        return false;
+    }
+
+    return currentProjects.every((project) => expandedProjectIds.has(Number(project.project_id)));
+}
+
+function updateMasterToggleButton() {
+    if (!toggleAllBtn) {
+        return;
+    }
+
+    const totalProjects = Array.isArray(currentProjects) ? currentProjects.length : 0;
+    const allExpanded = areAllProjectsExpanded();
+
+    toggleAllBtn.disabled = totalProjects === 0;
+    toggleAllBtn.textContent = allExpanded ? `Collapse All (${totalProjects})` : `Expand All (${totalProjects})`;
+}
+
+function toggleAllProjectDetails() {
+    if (!Array.isArray(currentProjects) || currentProjects.length === 0) {
+        return;
+    }
+
+    if (areAllProjectsExpanded()) {
+        expandedProjectIds.clear();
+        setStatus('Collapsed all master records.');
+    } else {
+        expandedProjectIds = new Set(currentProjects.map((project) => Number(project.project_id)));
+        setStatus(`Expanded all master records (${currentProjects.length}).`);
+    }
+
+    renderRecords(currentProjects);
 }
 
 function buildTasksByProjectMap(tasks) {
@@ -552,6 +592,7 @@ async function detectBackendUrl() {
 
 async function initializePage() {
     refreshBtn.addEventListener('click', fetchMasterRecords);
+    toggleAllBtn.addEventListener('click', toggleAllProjectDetails);
     createForm.addEventListener('submit', handleCreateSubmit);
     recordsGrid.addEventListener('click', handleGridClick);
     recordsGrid.addEventListener('submit', handleGridSubmit);

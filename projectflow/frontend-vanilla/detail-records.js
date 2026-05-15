@@ -8,6 +8,7 @@ let currentTasks = [];
 let expandedProjectIds = new Set();
 
 const refreshBtn = document.getElementById('refreshBtn');
+const toggleAllBtn = document.getElementById('toggleAllBtn');
 const createForm = document.getElementById('createForm');
 const createSubmitBtn = document.getElementById('createSubmitBtn');
 const createProjectId = document.getElementById('createProjectId');
@@ -155,6 +156,47 @@ function getProjectGroups(tasks) {
     return groups;
 }
 
+function areAllProjectGroupsExpanded() {
+    const groups = getProjectGroups(currentTasks);
+
+    if (groups.length === 0) {
+        return false;
+    }
+
+    return groups.every((group) => expandedProjectIds.has(group.projectId));
+}
+
+function updateMasterToggleButton() {
+    if (!toggleAllBtn) {
+        return;
+    }
+
+    const groups = getProjectGroups(currentTasks);
+    const totalGroups = groups.length;
+    const allExpanded = totalGroups > 0 && groups.every((group) => expandedProjectIds.has(group.projectId));
+
+    toggleAllBtn.disabled = totalGroups === 0;
+    toggleAllBtn.textContent = allExpanded ? `Collapse All (${totalGroups})` : `Expand All (${totalGroups})`;
+}
+
+function toggleAllProjectDetails() {
+    const groups = getProjectGroups(currentTasks);
+
+    if (groups.length === 0) {
+        return;
+    }
+
+    if (areAllProjectGroupsExpanded()) {
+        expandedProjectIds.clear();
+        setStatus('Collapsed all record groups.');
+    } else {
+        expandedProjectIds = new Set(groups.map((group) => group.projectId));
+        setStatus(`Expanded all record groups (${groups.length}).`);
+    }
+
+    renderRecords(currentTasks, buildMasterNameMap(masterRecords));
+}
+
 function toggleProjectDetails(projectId) {
     const key = String(projectId);
 
@@ -183,6 +225,7 @@ function renderRecords(tasks, masterNameMap) {
 
     if (projectGroups.length === 0) {
         recordsGrid.innerHTML = '';
+        updateMasterToggleButton();
         return;
     }
 
@@ -310,6 +353,8 @@ function renderRecords(tasks, masterNameMap) {
             `;
         })
         .join('');
+
+    updateMasterToggleButton();
 }
 
 async function fetchDetailRecords() {
@@ -544,6 +589,7 @@ async function detectBackendUrl() {
 
 async function initializePage() {
     refreshBtn.addEventListener('click', fetchDetailRecords);
+    toggleAllBtn.addEventListener('click', toggleAllProjectDetails);
     createForm.addEventListener('submit', handleCreateSubmit);
     recordsGrid.addEventListener('click', handleGridClick);
     recordsGrid.addEventListener('submit', handleGridSubmit);
