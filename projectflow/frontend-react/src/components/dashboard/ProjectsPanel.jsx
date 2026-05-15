@@ -3,6 +3,7 @@ import MasterList from '../master/MasterList'
 
 function ProjectsPanel({
   projects,
+  tasks,
   selectedProjectId,
   isSubmitting,
   projectForm,
@@ -39,6 +40,7 @@ function ProjectsPanel({
 
       <MasterList
         projects={projects}
+        tasks={tasks}
         selectedProjectId={selectedProjectId}
         editingProjectId={editingProjectId}
         editProjectForm={editProjectForm}

@@ -115,6 +115,23 @@
   display: grid;
   gap: 4px;
   cursor: pointer;
+  position: relative;
+  padding-right: 32px;
+}
+
+.item-button::after {
+  content: '▾';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  color: #4b5563;
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+
+.item-button[aria-expanded='true']::after {
+  transform: translateY(-50%) rotate(0deg);
 }
 
 .item-button.selected {
@@ -126,6 +143,40 @@
   border: 1px solid #dfe8ee;
   border-radius: 10px;
   padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.inline-related-tasks {
+  margin-top: 8px;
+  border: 1px solid #d6e6ee;
+  border-radius: 10px;
+  padding: 10px;
+  background: #f9fcff;
+}
+
+.inline-related-list {
+  display: grid;
+  gap: 8px;
+}
+
+.inline-task-details {
+  border: 1px solid #d6e6ee;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+}
+
+.inline-task-details > summary {
+  cursor: pointer;
+  display: grid;
+  gap: 3px;
+}
+
+.inline-task-body {
+  margin-top: 8px;
+  border-top: 1px solid #e2edf3;
+  padding-top: 8px;
   display: grid;
   gap: 4px;
 }

@@ -4,6 +4,8 @@ const MASTER_ENDPOINT = '/api/projects';
 const HEALTH_ENDPOINT = '/api/health';
 let apiBaseUrl = null;
 let masterRecords = [];
+let currentTasks = [];
+let expandedProjectIds = new Set();
 
 const refreshBtn = document.getElementById('refreshBtn');
 const createForm = document.getElementById('createForm');
@@ -105,86 +107,205 @@ function buildMasterNameMap(projects) {
     );
 }
 
+function buildTasksByProjectMap(tasks) {
+    const taskMap = new Map();
+
+    if (!Array.isArray(tasks)) {
+        return taskMap;
+    }
+
+    for (const task of tasks) {
+        const projectId = task.project_id !== undefined ? String(task.project_id) : 'Unknown';
+
+        if (!taskMap.has(projectId)) {
+            taskMap.set(projectId, []);
+        }
+
+        taskMap.get(projectId).push(task);
+    }
+
+    return taskMap;
+}
+
+function getProjectGroups(tasks) {
+    const knownProjectIds = new Set(masterRecords.map((project) => String(project.project_id)));
+    const groups = masterRecords.map((project) => ({
+        projectId: String(project.project_id),
+        projectName: project.project_name || `Project ${project.project_id}`,
+        status: project.status || 'Unknown',
+        dueDate: project.due_date || 'Not set'
+    }));
+
+    for (const task of tasks) {
+        const projectId = task.project_id !== undefined ? String(task.project_id) : 'Unknown';
+
+        if (knownProjectIds.has(projectId)) {
+            continue;
+        }
+
+        knownProjectIds.add(projectId);
+        groups.push({
+            projectId,
+            projectName: `Unknown Project (${projectId})`,
+            status: 'Unknown',
+            dueDate: 'Not set'
+        });
+    }
+
+    return groups;
+}
+
+function toggleProjectDetails(projectId) {
+    const key = String(projectId);
+
+    if (expandedProjectIds.has(key)) {
+        expandedProjectIds.delete(key);
+    } else {
+        expandedProjectIds = new Set([key]);
+    }
+}
+
 function renderRecords(tasks, masterNameMap) {
-    if (!Array.isArray(tasks) || tasks.length === 0) {
+    if (!Array.isArray(tasks)) {
         recordsGrid.innerHTML = '';
         setMessage('info', 'No detail records were returned by the API.');
         return;
     }
 
-    setMessage('', '');
+    const tasksByProjectId = buildTasksByProjectMap(tasks);
+    const projectGroups = getProjectGroups(tasks);
 
-    recordsGrid.innerHTML = tasks
-        .map((task) => {
-            const projectId = task.project_id !== undefined ? String(task.project_id) : 'Unknown';
-            const projectName = masterNameMap.get(projectId) || 'Unknown Project';
-            const taskId = escapeHtml(task.task_id);
-            const taskTitle = escapeHtml(task.task_title || 'Untitled Task');
-            const taskDescription = escapeHtml(task.task_description || '');
-            const priority = escapeHtml(task.priority || 'Unknown');
-            const status = escapeHtml(task.status || 'Unknown');
-            const dueDate = escapeHtml(task.due_date || 'Not set');
-            const description = task.task_description && String(task.task_description).trim()
-                ? `<p class="record-desc">${taskDescription}</p>`
-                : '<p class="record-desc">No description</p>';
+    if (tasks.length === 0) {
+        setMessage('info', 'No detail records yet. Expand a master record to confirm there are no connected tasks.');
+    } else {
+        setMessage('', '');
+    }
 
-            const optionMarkup = buildMasterOptions(masterRecords, projectId);
+    if (projectGroups.length === 0) {
+        recordsGrid.innerHTML = '';
+        return;
+    }
+
+    expandedProjectIds = new Set(
+        [...expandedProjectIds].filter((projectId) =>
+            projectGroups.some((group) => group.projectId === projectId)
+        )
+    );
+
+    recordsGrid.innerHTML = projectGroups
+        .map((group) => {
+            const projectId = group.projectId;
+            const safeProjectId = escapeHtml(projectId);
+            const projectName = escapeHtml(masterNameMap.get(projectId) || group.projectName);
+            const projectStatus = escapeHtml(group.status);
+            const projectDueDate = escapeHtml(group.dueDate);
+            const relatedTasks = tasksByProjectId.get(projectId) || [];
+            const detailsCount = relatedTasks.length;
+            const isExpanded = expandedProjectIds.has(projectId);
+
+            const relatedTaskMarkup = detailsCount
+                ? relatedTasks
+                    .map((task) => {
+                        const taskId = escapeHtml(task.task_id);
+                        const taskTitle = escapeHtml(task.task_title || `Task ${task.task_id}`);
+                        const taskDescription = escapeHtml(task.task_description || '');
+                        const priority = escapeHtml(task.priority || 'Unknown');
+                        const status = escapeHtml(task.status || 'Unknown');
+                        const dueDate = escapeHtml(task.due_date || 'Not set');
+                        const description = task.task_description && String(task.task_description).trim()
+                            ? `<p class="record-desc">${taskDescription}</p>`
+                            : '<p class="record-desc">No description</p>';
+                        const optionMarkup = buildMasterOptions(masterRecords, projectId);
+
+                        return `
+                            <details class="task-collapse">
+                                <summary>
+                                    <strong>${taskTitle}</strong>
+                                    <span class="task-collapse-meta">Task #${taskId} | Priority: ${priority} | Status: ${status}</span>
+                                </summary>
+                                <div class="task-collapse-body">
+                                    <p class="record-meta">Connected Master: ${projectName} (ID: ${safeProjectId})</p>
+                                    <p class="record-meta">Due Date: ${dueDate}</p>
+                                    ${description}
+
+                                    <div class="card-actions">
+                                        <button class="btn btn-secondary edit-toggle-btn" type="button" data-task-id="${taskId}">Edit Detail</button>
+                                        <form class="inline-form delete-form" data-task-id="${taskId}">
+                                            <button class="btn btn-danger" type="submit">Delete Detail</button>
+                                        </form>
+                                    </div>
+
+                                    <form class="edit-form" data-task-id="${taskId}" hidden>
+                                        <div class="form-grid">
+                                            <div class="field">
+                                                <label>Connected Master *</label>
+                                                <select name="project_id" required>${optionMarkup}</select>
+                                            </div>
+
+                                            <div class="field">
+                                                <label>Task Title *</label>
+                                                <input name="task_title" type="text" value="${taskTitle}" required>
+                                            </div>
+
+                                            <div class="field">
+                                                <label>Priority *</label>
+                                                <input name="priority" type="text" value="${priority}" required>
+                                            </div>
+
+                                            <div class="field">
+                                                <label>Status *</label>
+                                                <input name="status" type="text" value="${status}" required>
+                                            </div>
+
+                                            <div class="field">
+                                                <label>Due Date</label>
+                                                <input name="due_date" type="date" value="${escapeHtml(task.due_date || '')}">
+                                            </div>
+                                        </div>
+
+                                        <div class="field">
+                                            <label>Task Description</label>
+                                            <textarea name="task_description">${taskDescription}</textarea>
+                                        </div>
+
+                                        <div class="form-actions">
+                                            <button class="btn btn-primary" type="submit">Save Changes</button>
+                                            <button class="btn btn-secondary cancel-edit-btn" type="button" data-task-id="${taskId}">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </details>
+                        `;
+                    })
+                    .join('')
+                : '<p class="small-note">No detail records under this master yet.</p>';
 
             return `
                 <article class="record-card">
-                    <h2>${taskTitle}</h2>
-                    <p class="record-meta">Task ID: ${taskId}</p>
-                    <p class="record-meta">Connected Master: ${escapeHtml(projectName)} (ID: ${escapeHtml(projectId)})</p>
-                    <p class="record-meta">Due Date: ${dueDate}</p>
-                    <span class="pill pill-priority">Priority: ${priority}</span>
-                    <span class="pill pill-status">Status: ${status}</span>
-                    ${description}
+                    <button
+                        class="record-title-toggle"
+                        type="button"
+                        data-project-id="${safeProjectId}"
+                        aria-expanded="${isExpanded ? 'true' : 'false'}"
+                    >
+                        <span>${projectName}</span>
+                        <span class="small-note">${isExpanded ? 'Hide details' : 'Show details'}</span>
+                    </button>
+                    <p class="record-meta">Project ID: ${safeProjectId}</p>
+                    <p class="record-meta">Status: ${projectStatus} | Due: ${projectDueDate}</p>
 
                     <div class="card-actions">
-                        <button class="btn btn-secondary edit-toggle-btn" type="button" data-task-id="${taskId}">Edit Detail</button>
-                        <form class="inline-form delete-form" data-task-id="${taskId}">
-                            <button class="btn btn-danger" type="submit">Delete Detail</button>
-                        </form>
+                        <button class="btn btn-primary select-project-btn" type="button" data-project-id="${safeProjectId}" aria-expanded="${isExpanded ? 'true' : 'false'}">
+                            ${isExpanded ? `Hide Details (${detailsCount})` : `Show Details (${detailsCount})`}
+                        </button>
                     </div>
 
-                    <form class="edit-form" data-task-id="${taskId}" hidden>
-                        <div class="form-grid">
-                            <div class="field">
-                                <label>Connected Master *</label>
-                                <select name="project_id" required>${optionMarkup}</select>
-                            </div>
-
-                            <div class="field">
-                                <label>Task Title *</label>
-                                <input name="task_title" type="text" value="${taskTitle}" required>
-                            </div>
-
-                            <div class="field">
-                                <label>Priority *</label>
-                                <input name="priority" type="text" value="${priority}" required>
-                            </div>
-
-                            <div class="field">
-                                <label>Status *</label>
-                                <input name="status" type="text" value="${status}" required>
-                            </div>
-
-                            <div class="field">
-                                <label>Due Date</label>
-                                <input name="due_date" type="date" value="${escapeHtml(task.due_date || '')}">
-                            </div>
+                    <section class="project-details-block" ${isExpanded ? '' : 'hidden'}>
+                        <p class="small-note">Detail records under this master:</p>
+                        <div class="project-details-list">
+                            ${relatedTaskMarkup}
                         </div>
-
-                        <div class="field">
-                            <label>Task Description</label>
-                            <textarea name="task_description">${taskDescription}</textarea>
-                        </div>
-
-                        <div class="form-actions">
-                            <button class="btn btn-primary" type="submit">Save Changes</button>
-                            <button class="btn btn-secondary cancel-edit-btn" type="button" data-task-id="${taskId}">Cancel</button>
-                        </div>
-                    </form>
+                    </section>
                 </article>
             `;
         })
@@ -208,14 +329,15 @@ async function fetchDetailRecords() {
             requestJson(`${apiBaseUrl}${MASTER_ENDPOINT}`).catch(() => [])
         ]);
 
+        currentTasks = Array.isArray(tasks) ? tasks : [];
         masterRecords = Array.isArray(projects) ? projects : [];
         refreshMasterSelects(masterRecords);
         const masterNameMap = buildMasterNameMap(projects);
-        renderRecords(tasks, masterNameMap);
+        renderRecords(currentTasks, masterNameMap);
 
         const now = new Date();
         lastUpdated.textContent = now.toLocaleString();
-        setStatus(`Loaded ${Array.isArray(tasks) ? tasks.length : 0} detail records.`);
+        setStatus(`Loaded ${currentTasks.length} detail records.`);
     } catch (error) {
         console.error('Failed to fetch detail records:', error);
         recordsGrid.innerHTML = '';
@@ -283,6 +405,14 @@ async function handleCreateSubmit(event) {
 }
 
 function handleGridClick(event) {
+    const projectToggleBtn = event.target.closest('.select-project-btn, .record-title-toggle');
+    if (projectToggleBtn) {
+        const projectId = projectToggleBtn.dataset.projectId;
+        toggleProjectDetails(projectId);
+        renderRecords(currentTasks, buildMasterNameMap(masterRecords));
+        return;
+    }
+
     const editToggleBtn = event.target.closest('.edit-toggle-btn');
     if (editToggleBtn) {
         const taskId = editToggleBtn.dataset.taskId;

@@ -12,3 +12,11 @@
 ::1 - - [14/May/2026 16:42:00] "GET /master-records.js HTTP/1.1" 304 -
 ::1 - - [14/May/2026 16:42:33] "GET /detail-records.html HTTP/1.1" 304 -
 ::1 - - [14/May/2026 16:42:33] "GET /detail-records.js HTTP/1.1" 304 -
+::ffff:192.168.1.1 - - [14/May/2026 17:55:16] "GET / HTTP/1.1" 200 -
+::1 - - [15/May/2026 10:02:40] "GET /index.html HTTP/1.1" 304 -
+::1 - - [15/May/2026 10:02:40] "GET /styles.css HTTP/1.1" 304 -
+::1 - - [15/May/2026 10:02:40] "GET /script.js HTTP/1.1" 304 -
+::1 - - [15/May/2026 10:02:57] "GET /master-records.html HTTP/1.1" 200 -
+::1 - - [15/May/2026 10:02:58] "GET /master-records.js HTTP/1.1" 200 -
+::1 - - [15/May/2026 10:04:06] "GET /detail-records.html HTTP/1.1" 200 -
+::1 - - [15/May/2026 10:04:06] "GET /detail-records.js HTTP/1.1" 304 -

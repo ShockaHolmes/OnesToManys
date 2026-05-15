@@ -242,6 +242,86 @@
             margin-top: 0.8rem;
         }
 
+        .record-title-toggle {
+            width: 100%;
+            border: 1px solid #d7e4ee;
+            border-radius: 10px;
+            background: #f8fbff;
+            color: var(--ink);
+            text-align: left;
+            padding: 0.6rem 0.7rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            margin-bottom: 0.55rem;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        .record-title-toggle:hover {
+            background: #eef5ff;
+            border-color: #bfdbfe;
+        }
+
+        .record-title-toggle::after {
+            content: '▾';
+            color: #4b5563;
+            font-size: 0.9rem;
+            transform: rotate(-90deg);
+            transition: transform 0.2s ease;
+        }
+
+        .record-title-toggle[aria-expanded='true']::after {
+            transform: rotate(0deg);
+        }
+
+        .project-details-block {
+            border-top: 1px solid var(--line);
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+        }
+
+        .project-details-list {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .task-collapse {
+            border: 1px solid #dbe3ef;
+            border-radius: 10px;
+            background: #f8fbff;
+            padding: 0.55rem 0.65rem;
+        }
+
+        .task-collapse[open] {
+            background: #f3f8ff;
+            border-color: #bfd8ff;
+        }
+
+        .task-collapse > summary {
+            cursor: pointer;
+            display: grid;
+            gap: 0.25rem;
+            list-style: none;
+        }
+
+        .task-collapse > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .task-collapse-meta {
+            color: var(--muted);
+            font-size: 0.86rem;
+        }
+
+        .task-collapse-body {
+            margin-top: 0.65rem;
+            border-top: 1px solid #dbe3ef;
+            padding-top: 0.65rem;
+        }
+
         .inline-form {
             margin: 0;
         }

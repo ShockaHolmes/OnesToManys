@@ -218,6 +218,41 @@
             word-break: break-word;
         }
 
+        .record-title-toggle {
+            width: 100%;
+            border: 1px solid #d7e4ee;
+            border-radius: 10px;
+            background: #f8fbff;
+            color: var(--ink);
+            text-align: left;
+            padding: 0.6rem 0.7rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            margin-bottom: 0.55rem;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        .record-title-toggle:hover {
+            background: #eef5ff;
+            border-color: #bfdbfe;
+        }
+
+        .record-title-toggle::after {
+            content: '▾';
+            color: #4b5563;
+            font-size: 0.9rem;
+            transform: rotate(-90deg);
+            transition: transform 0.2s ease;
+        }
+
+        .record-title-toggle[aria-expanded='true']::after {
+            transform: rotate(0deg);
+        }
+
         .record-meta {
             color: var(--muted);
             font-size: 0.9rem;

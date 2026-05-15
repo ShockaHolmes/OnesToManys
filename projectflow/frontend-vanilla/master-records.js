@@ -131,7 +131,15 @@ function renderRecords(records) {
 
             return `
                 <article class="record-card ${selectedProjectId === Number(project.project_id) ? 'selected' : ''}">
-                    <h2>${projectName}</h2>
+                    <button
+                        class="record-title-toggle"
+                        type="button"
+                        data-project-id="${projectId}"
+                        aria-expanded="${isExpanded ? 'true' : 'false'}"
+                    >
+                        <span>${projectName}</span>
+                        <span class="small-note">${isExpanded ? 'Hide details' : 'Show details'}</span>
+                    </button>
                     <p class="record-meta">Project ID: ${projectId}</p>
                     <p class="record-meta">Start: ${startDate} | Due: ${dueDate}</p>
                     <span class="status-chip">${status}</span>
@@ -379,7 +387,7 @@ async function handleCreateSubmit(event) {
 }
 
 function handleGridClick(event) {
-    const selectBtn = event.target.closest('.select-project-btn');
+    const selectBtn = event.target.closest('.select-project-btn, .record-title-toggle');
     if (selectBtn) {
         const projectId = Number(selectBtn.dataset.projectId);
         toggleProjectDetails(projectId);

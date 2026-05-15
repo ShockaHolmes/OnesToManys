@@ -97,6 +97,12 @@ function ProjectTaskDashboard() {
     [projects, selectedProjectId]
   )
 
+  const handleSelectProject = useCallback((projectId) => {
+    setSelectedProjectId((prevSelectedId) =>
+      Number(prevSelectedId) === Number(projectId) ? null : Number(projectId)
+    )
+  }, [])
+
   async function runMutation(action) {
     setIsSubmitting(true)
     setError('')
@@ -162,6 +168,7 @@ function ProjectTaskDashboard() {
     <section className="dashboard-grid">
       <ProjectsPanel
         projects={projects}
+        tasks={tasks}
         selectedProjectId={selectedProjectId}
         isSubmitting={isSubmitting}
         projectForm={projectForm}
@@ -174,7 +181,7 @@ function ProjectTaskDashboard() {
         onSaveEditedProject={saveEditedProject}
         onCancelEditProject={() => setEditingProjectId(null)}
         onDeleteProject={deleteProject}
-        onSelectProject={setSelectedProjectId}
+        onSelectProject={handleSelectProject}
       />
 
       <RelatedTasksPanel
